@@ -16,6 +16,7 @@ interface Milestone {
   label: string;
   shortLabel: string;
   description: string;
+  objective: string;
   historicalFact: string;
   missionFact: string;
   x: number;
@@ -30,6 +31,7 @@ const MILESTONES: Milestone[] = [
     label: "LAUNCH & ASCENT", 
     shortLabel: "LIFT",
     description: "The SLS rocket ignites and Orion begins its climb to Earth orbit.", 
+    objective: "Execute nominal vertical ascent and achieve initial Earth orbit insertion.",
     historicalFact: "Artemis II is the first crewed mission to the lunar vicinity in over 50 years.",
     missionFact: "Maximum dynamic pressure (Max-Q) occurs at approximately 70 seconds.",
     x: 21, y: 34, t: 0, color: "#3b82f6" 
@@ -39,42 +41,47 @@ const MILESTONES: Milestone[] = [
     label: "HEO PERIGEE RAISE", 
     shortLabel: "HEO",
     description: "Engine burn to reach High Earth Orbit for 24 hours of system testing.", 
+    objective: "Verify life support systems and proximity operations in high Earth orbit.",
     historicalFact: "HEO testing ensures life support systems are fully operational before TLI.",
     missionFact: "Orion's first burn in space to raise perigee from Earth's atmosphere.",
-    x: 30, y: 28, t: 2940, color: "#60a5fa" 
+    x: 32, y: 23, t: 2940, color: "#60a5fa" 
   },
   { 
     id: 2, 
     label: "TRANSLUNAR INJECTION", 
     shortLabel: "TLI",
     description: "The ICPS upper stage sends the crew on their trajectory toward the Moon.", 
+    objective: "Perform high-delta-V burn to depart Earth SOI and intercept lunar gravity.",
     historicalFact: "TLI marks the departure from Earth's immediate influence.",
     missionFact: "The ICPS provides the massive impulse needed to reach lunar distances.",
-    x: 42, y: 28, t: 92220, color: "#10b981" 
+    x: 48, y: 22, t: 92220, color: "#10b981" 
   },
   { 
     id: 3, 
     label: "CLOSEST APPROACH (FLYBY)", 
     shortLabel: "FLYBY",
     description: "Orion passes behind the Moon, using gravity for a free return to Earth.", 
+    objective: "Utilize lunar gravity for free-return trajectory and conduct farside observations.",
     historicalFact: "The flyby provides a spectacular view of the Lunar Farside.",
     missionFact: "Altitude drops to approx 10,000km above the lunar surface.",
-    x: 75, y: 60, t: 436980, color: "#f1f5f9" 
+    x: 82, y: 58, t: 436980, color: "#f1f5f9" 
   },
   { 
     id: 4, 
     label: "TRANSEARTH COAST", 
     shortLabel: "TEC",
     description: "The long journey back to Earth following the lunar gravity assist.", 
+    objective: "Maintain thermal management and crew health during the 4-day transit back to Earth.",
     historicalFact: "The free-return trajectory is a safety-first flight design.",
     missionFact: "Velocity gradually increases as Orion is pulled back by Earth's gravity.",
-    x: 45, y: 55, t: 550000, color: "#3b82f6" 
+    x: 45, y: 70, t: 550000, color: "#3b82f6" 
   },
   { 
     id: 5, 
     label: "RE-ENTRY & SPLASHDOWN", 
     shortLabel: "SPLASH",
     description: "Orion enters atmosphere and splashes down in the Pacific Ocean.", 
+    objective: "Demonstrate heat shield performance at lunar re-entry speeds and safe crew recovery.",
     historicalFact: "Artemis II splashdown targets the coast of San Diego.",
     missionFact: "The skip-entry maneuver bleeds off 25,000 mph of velocity.",
     x: 18, y: 38, t: 787560, color: "#ef4444" 
@@ -87,9 +94,11 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   const [isSynced, setIsSynced] = useState(true);
   const [nasaUpdates, setNasaUpdates] = useState<NASAUpdate[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
+  const [lastSync, setLastSync] = useState("");
   
-  const outboundPath = "M 21,34 C 25,25 35,20 50,25 C 65,30 80,45 75,60";
-  const returnPath = "M 75,60 C 70,75 50,75 35,60 C 25,50 20,42 18,38";
+  // Refined Artemis II "Free-Return" Figure-8 Style Path
+  const outboundPath = "M 21,34 C 23,28 35,20 50,22 C 65,25 78,45 82,58 C 84,65 78,68 75,60";
+  const returnPath = "M 75,60 C 72,52 65,75 45,70 C 30,65 22,45 18,38";
   
   const fullPathD = `${outboundPath} ${returnPath.replace('M', 'L')}`;
   const totalMissionSeconds = 787560;
@@ -110,11 +119,17 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   const fetchNews = async () => {
     setNewsLoading(true);
-    const updates = await getLatestNASANews();
-    if (Array.isArray(updates)) {
-      setNasaUpdates(updates);
+    try {
+      const updates = await getLatestNASANews();
+      if (Array.isArray(updates)) {
+        setNasaUpdates(updates);
+      }
+    } catch (error) {
+      console.error("Gemini News Error:", error);
+    } finally {
+      setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+      setNewsLoading(false);
     }
-    setNewsLoading(false);
   };
 
   useEffect(() => {
@@ -159,8 +174,8 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   }, [elapsedSeconds]);
 
   const mapContent = (
-    <div className="relative h-full w-full flex flex-col p-4 bg-slate-950/40 select-none">
-      <div className="flex justify-between items-start mb-4">
+    <div className="relative h-full w-full flex flex-col p-4 bg-slate-950/40 select-none overflow-hidden">
+      <div className="flex justify-between items-start mb-4 shrink-0">
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">Artemis II Trajectory Status</span>
           <div className="flex items-center space-x-3 mt-1">
@@ -194,16 +209,20 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               <radialGradient id="moonGrad"><stop offset="0%" stopColor="#f1f5f9" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
             </defs>
 
-            <path d={outboundPath} fill="none" stroke="#10b981" strokeWidth="0.8" strokeDasharray="1,1" className="opacity-20" />
-            <path d={returnPath} fill="none" stroke="#3b82f6" strokeWidth="0.8" strokeDasharray="1,1" className="opacity-20" />
+            {/* Background Paths */}
+            <path d={outboundPath} fill="none" stroke="#10b981" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
+            <path d={returnPath} fill="none" stroke="#3b82f6" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
             
-            <path ref={pathRef} d={fullPathD} fill="none" stroke="transparent" />
+            {/* Real Progress Path Track */}
+            <path ref={pathRef} d={fullPathD} fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="0.8" />
 
+            {/* Earth Reference */}
             <g transform="translate(20, 35)">
                <circle r="7" fill="url(#earthGrad)" stroke="#3b82f6" strokeWidth="0.2" className="opacity-80" />
                <text y="12" textAnchor="middle" className="text-[3px] mono fill-blue-400/60 font-bold uppercase tracking-widest">Earth</text>
             </g>
 
+            {/* Moon Reference */}
             <g transform="translate(75, 60)">
                <circle r="5" fill="url(#moonGrad)" stroke="#94a3b8" strokeWidth="0.2" className="opacity-80" />
                <text y="10" textAnchor="middle" className="text-[3px] mono fill-slate-400 font-bold uppercase tracking-widest">The Moon</text>
@@ -222,6 +241,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               );
             })}
 
+            {/* Orion Indicator */}
             {progress > 0 && progress < 1 && (
               <g transform={`translate(${indicatorPos.x}, ${indicatorPos.y}) rotate(${indicatorPos.angle})`}>
                 <path d="M -1.5,-1 L 2,0 L -1.5,1 Z" fill="#fff" stroke="#3b82f6" strokeWidth="0.3" />
@@ -230,8 +250,9 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
             )}
           </svg>
 
+          {/* Milestone Details Overlay */}
           {selectedMilestone && (
-            <div className="absolute top-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 z-50">
+            <div className="absolute top-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 z-50 overflow-y-auto max-h-[80%] custom-scrollbar">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-2">
@@ -244,10 +265,16 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                 </button>
               </div>
               <p className="text-[8px] text-slate-400 mt-1 font-mono italic">"{selectedMilestone.description}"</p>
-              <div className="grid grid-cols-2 gap-3 mt-2 pt-2 border-t border-slate-800">
+              
+              <div className="mt-3 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
+                <span className="text-[7px] text-blue-400 font-bold uppercase block tracking-widest mb-1">Primary Mission Objective</span>
+                <p className="text-[9px] text-slate-200 mono leading-tight">{selectedMilestone.objective}</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800">
                  <div>
-                    <span className="text-[7px] text-blue-400 font-bold uppercase block">Mission Detail</span>
-                    <p className="text-[7px] text-slate-400 mono">{selectedMilestone.missionFact}</p>
+                    <span className="text-[7px] text-blue-400 font-bold uppercase block">Technical Detail</span>
+                    <p className="text-[7px] text-slate-400 mono leading-tight">{selectedMilestone.missionFact}</p>
                  </div>
                  <div className="text-right">
                     <span className="text-[7px] text-slate-500 font-bold uppercase block">Relative MET</span>
@@ -258,14 +285,14 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           )}
         </div>
 
-        {/* NASA News Intelligence Side Panel - Structured and Scrollable */}
+        {/* NASA News Intelligence Side Panel - Strictly Stationary & Scrollable */}
         <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden">
-          <div className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
+          <div className="h-9 px-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
             <span className="text-[8px] mono font-bold text-blue-400 tracking-tighter uppercase">NASA_INTEL_UPLINK</span>
             <div className={`w-1.5 h-1.5 rounded-full ${newsLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20">
-             <div className="flex flex-col">
+             <div className="flex flex-col min-h-full">
                {nasaUpdates.length === 0 && !newsLoading && (
                  <div className="p-3 text-[9px] mono text-slate-600 italic">Listening for mission updates...</div>
                )}
@@ -276,7 +303,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                  >
                    <div className="flex items-center justify-between mb-1">
                      <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">DATA_{idx.toString().padStart(2, '0')}</span>
-                     <span className="text-[7px] mono text-slate-600">{update.timestamp}</span>
+                     <span className="text-[7px] mono text-slate-600 uppercase tabular-nums">{update.timestamp}</span>
                    </div>
                    <p className="text-[9px] mono text-slate-400 leading-relaxed font-medium">
                      {update.content}
@@ -284,29 +311,28 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                  </div>
                ))}
                {newsLoading && (
-                 <div className="p-3 flex items-center space-x-2">
-                   <div className="w-1 h-1 bg-blue-500 animate-bounce"></div>
-                   <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>
-                   <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.4s]"></div>
+                 <div className="p-3 flex flex-col items-center justify-center space-y-2 py-6">
+                   <div className="w-3 h-3 border border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                   <span className="text-[7px] mono text-slate-600 uppercase">Polling...</span>
                  </div>
                )}
              </div>
           </div>
-          <div className="px-3 py-1.5 bg-slate-950/60 border-t border-slate-800 flex justify-between shrink-0">
+          <div className="h-7 px-3 bg-slate-950/60 border-t border-slate-800 flex justify-between items-center shrink-0">
              <span className="text-[7px] mono text-slate-600 uppercase">Status: Live</span>
-             <span className="text-[7px] mono text-slate-600 uppercase">Uptime: {Math.floor(elapsedSeconds / 60)}M</span>
+             <span className="text-[7px] mono text-slate-500 uppercase tabular-nums">{lastSync}</span>
           </div>
         </div>
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-3 gap-3 shrink-0">
         <div className="glass p-2 rounded-lg border border-slate-800/50 bg-slate-950/40">
            <span className="text-[7px] text-slate-500 uppercase block font-bold">Total Distance</span>
-           <span className="text-[10px] mono text-blue-300 font-bold">{Math.floor(distanceKm).toLocaleString()} KM</span>
+           <span className="text-[10px] mono text-blue-300 font-bold tabular-nums">{Math.floor(distanceKm).toLocaleString()} KM</span>
         </div>
         <div className="glass p-2 rounded-lg border border-slate-800/50 bg-slate-950/40">
            <span className="text-[7px] text-slate-500 uppercase block font-bold">Progress</span>
-           <span className="text-[10px] mono text-emerald-300 font-bold">{(progress * 100).toFixed(3)}%</span>
+           <span className="text-[10px] mono text-emerald-300 font-bold tabular-nums">{(progress * 100).toFixed(3)}%</span>
         </div>
         <div className="glass p-2 rounded-lg border border-slate-800/50 bg-slate-950/40">
            <span className="text-[7px] text-slate-500 uppercase block font-bold">Nav Lock</span>

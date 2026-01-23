@@ -1,9 +1,30 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MissionPhase, TelemetryData } from "../types";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Robust API Key retrieval
+const getApiKey = () => {
+  try {
+    return process.env.API_KEY || '';
+  } catch (e) {
+    return '';
+  }
+};
+
+const API_KEY = getApiKey();
+
+// Initialize AI lazily to avoid top-level crashes if process is weird
+const getAI = () => {
+  if (!API_KEY) {
+    console.warn("Gemini API: Mission Control is running in offline mode (API_KEY missing).");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey: API_KEY });
+};
 
 export const getMissionBriefing = async (phase: MissionPhase, telemetry: TelemetryData) => {
+  const ai = getAI();
+  if (!ai) return "Status nominal. Telemetry stream stable.";
+
   try {
     const prompt = `You are a NASA flight controller for Artemis II. 
     Current Mission Phase: ${phase}.
@@ -27,12 +48,29 @@ export const getMissionBriefing = async (phase: MissionPhase, telemetry: Telemet
   }
 };
 
+/**
+ * Extracts JSON from markdown code blocks or raw strings
+ */
+const extractJson = (text: string) => {
+  try {
+    // Look for JSON block
+    const regex = /\{[\s\S]*\}|\[[\s\S]*\]/;
+    const match = text.match(regex);
+    return match ? match[0] : text;
+  } catch (e) {
+    return text;
+  }
+};
+
 export const getLatestNASANews = async () => {
+  const ai = getAI();
+  if (!ai) return [];
+
   try {
     const prompt = "Search for the most recent official Artemis II mission updates exclusively from NASA. Provide a list of updates. Each update should include a brief timestamp/date if available and the update text itself.";
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
@@ -58,7 +96,9 @@ export const getLatestNASANews = async () => {
       }
     });
 
-    return JSON.parse(response.text).updates;
+    const jsonStr = extractJson(response.text);
+    const parsed = JSON.parse(jsonStr);
+    return parsed.updates || [];
   } catch (error) {
     console.error("Gemini News Error:", error);
     return [];

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 
 interface SharedProps {
@@ -142,7 +143,7 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
   }, []);
 
   return (
-    <div ref={containerRef} className="aspect-video glass rounded-2xl overflow-hidden border border-white/10 relative group bg-black shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+    <div ref={containerRef} className="h-full w-full glass rounded-2xl overflow-hidden border border-white/10 relative group bg-black shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
       {/* HUD Info */}
       <div className="absolute top-4 left-4 z-40 flex flex-col space-y-2">
         <div className="flex items-center space-x-3 bg-black/80 backdrop-blur-xl px-4 py-2 rounded-lg text-xs font-black text-white border border-white/20 shadow-xl">
@@ -192,17 +193,25 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 };
 
 export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) => {
-  const titles = ['Exterior Optics 01', 'Orion Navigation Deck'];
-  const [muteStates, setMuteStates] = useState<boolean[]>([true, true]);
-  const [playStates, setPlayStates] = useState<boolean[]>([true, true]);
-  const [loadingStates, setLoadingStates] = useState<boolean[]>([true, true]);
-  const [refreshKeys, setRefreshKeys] = useState<number[]>([0, 0]);
+  const titles = ['Exterior Optics 01', 'Orion Navigation Deck', 'Earth Observation 03'];
   
-  const iframeRefs = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
-  const containerRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+  const [muteStates, setMuteStates] = useState<boolean[]>(videoIds.map(() => true));
+  const [playStates, setPlayStates] = useState<boolean[]>(videoIds.map(() => true));
+  const [loadingStates, setLoadingStates] = useState<boolean[]>(videoIds.map(() => true));
+  const [refreshKeys, setRefreshKeys] = useState<number[]>(videoIds.map(() => 0));
+  
+  const iframeRefs = useRef<(HTMLIFrameElement | null)[]>([]);
+  const containerRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    setMuteStates(videoIds.map(() => true));
+    setPlayStates(videoIds.map(() => true));
+    setLoadingStates(videoIds.map(() => true));
+    setRefreshKeys(videoIds.map(() => 0));
+  }, [videoIds.length]);
 
   const toggleMute = (idx: number) => {
-    sendCommand(iframeRefs[idx].current, muteStates[idx] ? 'unMute' : 'mute');
+    sendCommand(iframeRefs.current[idx], muteStates[idx] ? 'unMute' : 'mute');
     setMuteStates(prev => {
         const next = [...prev];
         next[idx] = !prev[idx];
@@ -211,7 +220,7 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
   };
 
   const togglePlay = (idx: number) => {
-    sendCommand(iframeRefs[idx].current, playStates[idx] ? 'pauseVideo' : 'playVideo');
+    sendCommand(iframeRefs.current[idx], playStates[idx] ? 'pauseVideo' : 'playVideo');
     setPlayStates(prev => {
         const next = [...prev];
         next[idx] = !prev[idx];
@@ -221,7 +230,7 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
 
   const toggleFullscreen = (idx: number) => {
     if (!document.fullscreenElement) {
-      containerRefs[idx].current?.requestFullscreen();
+      containerRefs.current[idx]?.requestFullscreen();
     } else {
       document.exitFullscreen();
     }
@@ -237,11 +246,11 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
   };
 
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className={`grid gap-4 ${videoIds.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
       {videoIds.map((id, idx) => (
         <div 
           key={`secondary-feed-${idx}-${id}`} 
-          ref={containerRefs[idx]} 
+          ref={el => { containerRefs.current[idx] = el; }} 
           className="aspect-video glass rounded-xl overflow-hidden border border-white/10 relative bg-black group shadow-xl hover:ring-2 hover:ring-blue-500/50 transition-all duration-300"
         >
            <div className="absolute top-2 left-2 z-20">
@@ -271,7 +280,7 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
            />
 
            <iframe
-              ref={iframeRefs[idx]}
+              ref={el => { iframeRefs.current[idx] = el; }}
               key={`iframe-secondary-${idx}-${id}-${refreshKeys[idx]}`}
               onLoad={() => handleLoad(idx)}
               className={`w-full h-full border-0 bg-black transition-all duration-700 ${loadingStates[idx] ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}

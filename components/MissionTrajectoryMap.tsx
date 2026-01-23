@@ -117,6 +117,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   }, [progress]);
 
   const fetchNews = async () => {
+    if (newsLoading) return;
     setNewsLoading(true);
     try {
       const updates = await getLatestNASANews();
@@ -124,7 +125,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
         setNasaUpdates(updates);
       }
     } catch (error) {
-      console.error("Gemini News Error:", error);
+      console.warn("Trajectory Map: News acquisition deferred.");
     } finally {
       setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
       setNewsLoading(false);
@@ -133,8 +134,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   useEffect(() => {
     fetchNews();
-    // Refresh every 25 minutes to avoid hitting rate limits
-    const newsInterval = setInterval(fetchNews, 1500000); 
+    const newsInterval = setInterval(fetchNews, 1800000); 
     return () => clearInterval(newsInterval);
   }, []);
 
@@ -142,7 +142,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
     return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
   }, [elapsedSeconds]);
 
-  // Synchronize detailed pop-up with the mission timeline
   useEffect(() => {
     if (isSynced) {
       setSelectedMilestone(currentActiveMilestone);
@@ -209,6 +208,14 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
             <defs>
               <radialGradient id="earthGrad"><stop offset="0%" stopColor="#3b82f6" /><stop offset="100%" stopColor="#020617" /></radialGradient>
               <radialGradient id="moonGrad"><stop offset="0%" stopColor="#f1f5f9" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
+              <clipPath id="earthClip">
+                <circle r="7" />
+              </clipPath>
+              <linearGradient id="earthShadow" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="rgba(0,0,0,0)" />
+                <stop offset="60%" stopColor="rgba(0,0,0,0)" />
+                <stop offset="100%" stopColor="rgba(0,0,0,0.65)" />
+              </linearGradient>
             </defs>
 
             <path d={outboundPath} fill="none" stroke="#10b981" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
@@ -216,8 +223,40 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
             
             <path ref={pathRef} d={fullPathD} fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="0.8" />
 
+            {/* Earth with Enhanced Diurnal Rotation Effect */}
             <g transform="translate(20, 35)">
-               <circle r="7" fill="url(#earthGrad)" stroke="#3b82f6" strokeWidth="0.2" className="opacity-80" />
+               {/* Atmospheric Halo */}
+               <circle r="7.8" fill="none" stroke="#3b82f6" strokeWidth="0.4" className="opacity-10" />
+
+               {/* Planet Body */}
+               <circle r="7" fill="#0f172a" stroke="#3b82f6" strokeWidth="0.2" className="opacity-90" />
+               
+               {/* Surface Detail Layer (Landmasses) */}
+               <g clipPath="url(#earthClip)">
+                  {/* Land Layer */}
+                  <g className="animate-earth-land-rotation">
+                    <path d="M -15,0 Q -12,-3 -9,0 T -3,0 T 3,0 T 9,0" fill="none" stroke="#3b82f6" strokeWidth="2.5" className="opacity-30" />
+                    <path d="M -15,4 Q -12,1 -9,4 T -3,4 T 3,4 T 9,4" fill="none" stroke="#3b82f6" strokeWidth="2.0" className="opacity-25" />
+                    <g transform="translate(24, 0)">
+                       <path d="M -15,0 Q -12,-3 -9,0 T -3,0 T 3,0 T 9,0" fill="none" stroke="#3b82f6" strokeWidth="2.5" className="opacity-30" />
+                       <path d="M -15,4 Q -12,1 -9,4 T -3,4 T 3,4 T 9,4" fill="none" stroke="#3b82f6" strokeWidth="2.0" className="opacity-25" />
+                    </g>
+                  </g>
+
+                  {/* Cloud Layer (Faster) */}
+                  <g className="animate-earth-cloud-rotation">
+                    <path d="M -12,-2 Q -10,0 -8,-2 T -4,-2 T 0,-2 T 4,-2" fill="none" stroke="#fff" strokeWidth="0.6" className="opacity-20" />
+                    <path d="M -12,2 Q -10,4 -8,2 T -4,2 T 0,2 T 4,2" fill="none" stroke="#fff" strokeWidth="0.4" className="opacity-15" />
+                    <g transform="translate(16, 0)">
+                       <path d="M -12,-2 Q -10,0 -8,-2 T -4,-2 T 0,-2 T 4,-2" fill="none" stroke="#fff" strokeWidth="0.6" className="opacity-20" />
+                       <path d="M -12,2 Q -10,4 -8,2 T -4,2 T 0,2 T 4,2" fill="none" stroke="#fff" strokeWidth="0.4" className="opacity-15" />
+                    </g>
+                  </g>
+
+                  {/* Fixed Shadow Overlay */}
+                  <circle r="7" fill="url(#earthShadow)" />
+               </g>
+
                <text y="12" textAnchor="middle" className="text-[3px] mono fill-blue-400/60 font-bold uppercase tracking-widest">Earth</text>
             </g>
 
@@ -256,7 +295,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                     <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{selectedMilestone.label}</h4>
                   </div>
                   {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
-                    <div className="flex items-center space-x-1 mt-0.5">
+                    <div className="flex items-center space-path-1 mt-0.5">
                       <span className="text-[7px] mono text-emerald-400 font-bold animate-pulse">● Live Tracking</span>
                     </div>
                   )}
@@ -294,7 +333,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20 min-h-0">
              <div className="flex flex-col min-h-full">
                {nasaUpdates.length === 0 && !newsLoading && (
-                 <div className="p-3 text-[9px] text-slate-600 italic">Listening for mission updates...</div>
+                 <div className="p-3 text-[9px] text-slate-600 italic">Acquiring mission data...</div>
                )}
                {nasaUpdates.map((update, idx) => (
                  <div 
@@ -339,6 +378,23 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
            <span className="text-[10px] text-slate-300 font-bold uppercase">{isSynced ? 'DSN Nominal' : 'Manual Override'}</span>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes earthLandRotation {
+          from { transform: translateX(0); }
+          to { transform: translateX(-24px); }
+        }
+        @keyframes earthCloudRotation {
+          from { transform: translateX(0); }
+          to { transform: translateX(-16px); }
+        }
+        .animate-earth-land-rotation {
+          animation: earthLandRotation 70s linear infinite;
+        }
+        .animate-earth-cloud-rotation {
+          animation: earthCloudRotation 45s linear infinite;
+        }
+      `}</style>
     </div>
   );
 

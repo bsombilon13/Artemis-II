@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { MissionPhase, TelemetryData } from './types';
 import MissionHeader from './components/MissionHeader';
@@ -9,7 +10,7 @@ import HorizontalTimeline from './components/HorizontalTimeline';
 import NASANewsCard from './components/NASANewsCard';
 
 const INITIAL_LAUNCH_DATE = new Date('2026-02-07T02:41:00Z');
-const INITIAL_VIDEO_IDS = ['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4'];
+const INITIAL_VIDEO_IDS = ['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4', '21X5lGlDOfg'];
 const HISTORY_LIMIT = 40;
 const STORAGE_KEY = 'artemis_mission_config_v3';
 
@@ -140,17 +141,22 @@ const App: React.FC = () => {
         <div className={isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}>
           <MissionHeader phase={displayPhase} setPhase={setPhase} countdownMs={countdownMs} onOpenSettings={() => setIsSettingsOpen(true)} />
         </div>
-        <div className="flex-1 p-4 flex flex-col overflow-hidden max-h-full space-y-4">
-          <div className="shrink-0 h-[140px]">
+        
+        <div className="flex-1 p-4 flex flex-col overflow-hidden space-y-4">
+          {/* Top Section: Progress Bar */}
+          <div className="shrink-0">
             <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
           </div>
-          <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
-            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-hidden pr-2 min-h-0">
-              <div className="flex space-x-4 items-stretch shrink-0 min-h-0">
+
+          {/* Main Dashboard Grid */}
+          <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
+            {/* Left Column: Video Feeds (Primary + Aux) */}
+            <div className="col-span-12 lg:col-span-7 flex flex-col h-full min-h-0 space-y-4">
+              <div className="flex space-x-4 h-full min-h-0">
                 <div className="flex-1 min-h-0">
                   <PrimaryFeed videoId={videoIds[0]} />
                 </div>
-                <div className="w-72 shrink-0 hidden xl:block relative min-h-0 overflow-hidden">
+                <div className="w-72 shrink-0 hidden xl:block relative min-h-0">
                   <div className="absolute inset-0">
                     <NASANewsCard />
                   </div>
@@ -160,13 +166,15 @@ const App: React.FC = () => {
                 <SecondaryFeeds videoIds={videoIds.slice(1)} onPromote={handlePromoteToPrimary} />
               </div>
             </div>
-            <div className="col-span-12 lg:col-span-5 flex flex-row h-full min-h-0 space-x-4">
-               <div className="flex-1 min-h-0">
-                  <MultiViewMonitor elapsedSeconds={elapsedSeconds} telemetry={telemetry} telemetryHistory={telemetryHistory} />
-               </div>
-               <div className={`w-64 shrink-0 flex flex-col min-h-0 ${isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`}>
-                  <MissionTimeline elapsedSeconds={elapsedSeconds} isCompressed={true} />
-               </div>
+
+            {/* Right Column: Monitors and Logs (Height Aligned with Left Column) */}
+            <div className="col-span-12 lg:col-span-5 flex h-full min-h-0 space-x-4">
+              <div className="flex-1 min-h-0 h-full">
+                <MultiViewMonitor elapsedSeconds={elapsedSeconds} telemetry={telemetry} telemetryHistory={telemetryHistory} />
+              </div>
+              <div className={`w-64 shrink-0 h-full min-h-0 ${isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`}>
+                <MissionTimeline elapsedSeconds={elapsedSeconds} isCompressed={true} />
+              </div>
             </div>
           </div>
         </div>

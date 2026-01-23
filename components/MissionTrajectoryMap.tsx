@@ -142,8 +142,11 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
     return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
   }, [elapsedSeconds]);
 
+  // Synchronize detailed pop-up with the mission timeline
   useEffect(() => {
-    if (isSynced) setSelectedMilestone(currentActiveMilestone);
+    if (isSynced) {
+      setSelectedMilestone(currentActiveMilestone);
+    }
   }, [currentActiveMilestone, isSynced]);
 
   const soiStatusText = useMemo(() => {
@@ -230,8 +233,8 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
             {MILESTONES.map((m) => {
               const isPassed = elapsedSeconds >= m.t;
-              const isCurrent = isSynced && currentActiveMilestone.id === m.id;
-              const isActive = (selectedMilestone?.id === m.id) || (hoveredId === m.id) || isCurrent;
+              const isCurrent = currentActiveMilestone.id === m.id;
+              const isActive = (selectedMilestone?.id === m.id) || (hoveredId === m.id) || (isSynced && isCurrent);
               return (
                 <g key={m.id} className="cursor-pointer" onMouseEnter={() => setHoveredId(m.id)} onMouseLeave={() => setHoveredId(null)} onClick={() => { setSelectedMilestone(m); setIsSynced(false); }}>
                   <circle cx={m.x} cy={m.y} r="5" fill="transparent" />
@@ -259,8 +262,13 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedMilestone.color }}></div>
                     <h4 className="text-[10px] font-bold text-white mono uppercase tracking-widest">{selectedMilestone.label}</h4>
                   </div>
+                  {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
+                    <div className="flex items-center space-x-1 mt-0.5">
+                      <span className="text-[7px] mono text-emerald-400 font-bold animate-pulse">● LIVE_TRACKING</span>
+                    </div>
+                  )}
                 </div>
-                <button onClick={() => { setSelectedMilestone(null); setIsSynced(true); }} className="text-slate-500 hover:text-white transition-colors">
+                <button onClick={() => { setSelectedMilestone(null); setIsSynced(false); }} className="text-slate-500 hover:text-white transition-colors">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>

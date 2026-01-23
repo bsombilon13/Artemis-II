@@ -162,17 +162,23 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
-            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-y-auto custom-scrollbar pr-2">
-              <div className="flex space-x-4 items-stretch">
-                <div className="flex-1">
+            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+              {/* Top Row: Primary Video and News Feed tightly bound by height */}
+              <div className="flex space-x-4 items-stretch shrink-0 min-h-0">
+                <div className="flex-1 min-h-0">
                   <PrimaryFeed videoId={videoIds[0]} />
                 </div>
-                <div className="w-72 shrink-0 hidden xl:block">
-                  <NASANewsCard />
+                {/* News Card is wrapped in an absolute container to prevent it from dictates the row height */}
+                <div className="w-72 shrink-0 hidden xl:block relative min-h-0 overflow-hidden">
+                  <div className="absolute inset-0">
+                    <NASANewsCard />
+                  </div>
                 </div>
               </div>
               
-              <SecondaryFeeds videoIds={videoIds.slice(1)} onPromote={handlePromoteToPrimary} />
+              <div className="shrink-0">
+                <SecondaryFeeds videoIds={videoIds.slice(1)} onPromote={handlePromoteToPrimary} />
+              </div>
             </div>
             <div className="col-span-12 lg:col-span-5 flex flex-row h-full min-h-0 space-x-4">
                <div className="flex-1 min-h-0">

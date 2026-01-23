@@ -174,7 +174,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   }, [elapsedSeconds]);
 
   const mapContent = (
-    <div className="relative h-full w-full flex flex-col p-4 bg-slate-950/40 select-none overflow-hidden">
+    <div className="relative h-full w-full flex flex-col p-4 bg-slate-950/40 select-none overflow-hidden min-h-0">
       <div className="flex justify-between items-start mb-4 shrink-0">
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-500 uppercase font-bold tracking-[0.2em]">Artemis II Trajectory Status</span>
@@ -286,12 +286,12 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
         </div>
 
         {/* NASA News Intelligence Side Panel - Strictly Stationary & Scrollable */}
-        <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden">
+        <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden min-h-0">
           <div className="h-9 px-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
             <span className="text-[8px] mono font-bold text-blue-400 tracking-tighter uppercase">NASA_INTEL_UPLINK</span>
             <div className={`w-1.5 h-1.5 rounded-full ${newsLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20">
+          <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20 min-h-0">
              <div className="flex flex-col min-h-full">
                {nasaUpdates.length === 0 && !newsLoading && (
                  <div className="p-3 text-[9px] mono text-slate-600 italic">Listening for mission updates...</div>

@@ -52,6 +52,7 @@ export const getMissionBriefing = async (phase: MissionPhase, telemetry: Telemet
  * Extracts JSON from markdown code blocks or raw strings
  */
 const extractJson = (text: string) => {
+  if (!text) return "";
   try {
     // Look for JSON block
     const regex = /\{[\s\S]*\}|\[[\s\S]*\]/;
@@ -96,7 +97,10 @@ export const getLatestNASANews = async () => {
       }
     });
 
-    const jsonStr = extractJson(response.text);
+    // Fix for TS2345: ensures extractJson receives a string, not string | undefined
+    const jsonStr = extractJson(response.text || "");
+    if (!jsonStr) return [];
+
     const parsed = JSON.parse(jsonStr);
     return parsed.updates || [];
   } catch (error) {

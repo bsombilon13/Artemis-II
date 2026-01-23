@@ -8,6 +8,14 @@ export enum MissionPhase {
   SPLASHDOWN = 'SPLASHDOWN'
 }
 
+export interface TimelineEvent {
+  label: string;
+  offsetSeconds: number; // Seconds relative to T-0
+  endOffsetSeconds?: number;
+  description?: string;
+  category?: 'countdown' | 'ascent' | 'transit' | 'lunar' | 'recovery';
+}
+
 export interface TelemetryData {
   timestamp: number;
   altitude: number;

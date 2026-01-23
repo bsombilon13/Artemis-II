@@ -3,17 +3,28 @@ import React, { useState } from 'react';
 
 interface Props {
   videoIds: string[];
-  countdown: number;
-  onSave: (ids: string[], countdown: number) => void;
+  launchDate: Date;
+  onSave: (ids: string[], newLaunchDate: Date) => void;
   onClose: () => void;
 }
 
-const SettingsPanel: React.FC<Props> = ({ videoIds, countdown, onSave, onClose }) => {
+const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose }) => {
   const [tempIds, setTempIds] = useState([...videoIds]);
-  const [tempCountdown, setTempCountdown] = useState(countdown);
+  
+  // Format Date for datetime-local input (YYYY-MM-DDTHH:mm:ss)
+  const formatDateForInput = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  };
+
+  const [tempDateStr, setTempDateStr] = useState(formatDateForInput(launchDate));
 
   const handleIdChange = (idx: number, val: string) => {
-    // Simple regex to extract ID if user pastes a full URL
     let id = val;
     if (val.includes('v=')) {
       id = val.split('v=')[1].split('&')[0];
@@ -28,47 +39,65 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, countdown, onSave, onClose }
     setTempIds(newIds);
   };
 
+  const handleSave = () => {
+    const newDate = new Date(tempDateStr);
+    if (!isNaN(newDate.getTime())) {
+      onSave(tempIds, newDate);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
       <div className="glass w-full max-w-md border border-slate-700 rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="bg-slate-900 p-4 border-b border-slate-800 flex items-center justify-between">
           <h2 className="text-sm font-bold mono tracking-widest text-slate-100 uppercase">Mission Configuration</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-2xl">&times;</button>
+          <button onClick={onClose} className="text-slate-500 hover:text-white text-2xl transition-colors">&times;</button>
         </div>
         
         <div className="p-6 space-y-6">
+          {/* Video Feeds Section */}
           <section className="space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Video Feed IDs</h3>
-              <span className="text-[9px] text-slate-600 mono italic">Paste YouTube ID or full URL</span>
+              <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Video Feed Sources</h3>
+              <span className="text-[9px] text-slate-600 mono italic">YouTube IDs or URLs</span>
             </div>
             {tempIds.map((id, idx) => (
-              <div key={idx}>
-                <label className="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Feed 0{idx + 1} Source</label>
+              <div key={idx} className="group">
+                <label className="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Feed 0{idx + 1}</label>
                 <input 
                   type="text" 
                   value={id}
-                  placeholder="Enter YouTube ID..."
+                  placeholder="Enter ID..."
                   onChange={(e) => handleIdChange(idx, e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-blue-400 focus:outline-none focus:border-blue-500 transition-colors"
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-blue-400 focus:outline-none focus:border-blue-500 transition-colors group-hover:border-slate-700"
                 />
               </div>
             ))}
           </section>
 
+          {/* Launch Time Section */}
           <section className="space-y-4">
-            <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Launch Timeline</h3>
+            <div className="flex items-center justify-between">
+              <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Launch Parameters</h3>
+              <div className="flex items-center space-x-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span className="text-[9px] text-emerald-500 mono font-bold">SYNC_TARGET</span>
+              </div>
+            </div>
             <div>
-              <label className="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Set Countdown (Seconds)</label>
+              <label className="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Target Launch Time (Local Window)</label>
               <input 
-                type="number" 
-                value={tempCountdown}
-                onChange={(e) => setTempCountdown(parseInt(e.target.value) || 0)}
-                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-emerald-400 focus:outline-none focus:border-emerald-500"
+                type="datetime-local" 
+                step="1"
+                value={tempDateStr}
+                onChange={(e) => setTempDateStr(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-emerald-400 focus:outline-none focus:border-emerald-500 appearance-none [color-scheme:dark]"
               />
-              <p className="mt-2 text-[9px] text-slate-600 mono italic leading-tight">
-                Countdown resets only during the PRE-LAUNCH phase.
-              </p>
+              <div className="mt-3 p-3 rounded bg-slate-900/50 border border-slate-800">
+                <p className="text-[9px] text-slate-500 mono leading-relaxed uppercase">
+                  Adjusting the launch window will recalculate the L-Minus countdown and all relative mission milestones in real-time.
+                </p>
+              </div>
             </div>
           </section>
         </div>
@@ -78,13 +107,13 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, countdown, onSave, onClose }
             onClick={onClose}
             className="px-4 py-2 text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white transition-colors"
           >
-            Cancel
+            Abort
           </button>
           <button 
-            onClick={() => onSave(tempIds, tempCountdown)}
+            onClick={handleSave}
             className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-xs uppercase tracking-widest font-bold text-white rounded shadow-lg shadow-blue-900/20 transition-all active:scale-95"
           >
-            Update Command Center
+            Update Flight Plan
           </button>
         </div>
       </div>

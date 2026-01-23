@@ -11,9 +11,14 @@ interface Props {
 
 const Sidebar: React.FC<Props> = ({ currentPhase, setPhase, countdown, onOpenSettings }) => {
   const formatCountdown = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
+    const d = Math.floor(seconds / (3600 * 24));
+    const h = Math.floor((seconds % (3600 * 24)) / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = seconds % 60;
+    
+    if (d > 0) {
+      return `${d}d ${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    }
     return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
@@ -33,7 +38,7 @@ const Sidebar: React.FC<Props> = ({ currentPhase, setPhase, countdown, onOpenSet
           <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" alt="NASA" className="w-8" />
         </div>
         <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-[0.2em] mb-1">Countdown</h2>
-        <div className={`text-3xl font-bold mono ${countdown < 10 && currentPhase === MissionPhase.PRE_LAUNCH ? 'text-red-500' : 'text-slate-100'}`}>
+        <div className={`text-2xl font-bold mono ${countdown < 10 && currentPhase === MissionPhase.PRE_LAUNCH ? 'text-red-500' : 'text-slate-100'}`}>
           {currentPhase === MissionPhase.PRE_LAUNCH ? `T-${formatCountdown(countdown)}` : 'T+ LAUNCH'}
         </div>
       </div>

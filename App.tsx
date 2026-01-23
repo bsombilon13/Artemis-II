@@ -1,12 +1,11 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { MissionPhase, TelemetryData, MissionUpdate } from './types';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MissionPhase, TelemetryData } from './types';
 import MissionHeader from './components/MissionHeader';
 import { PrimaryFeed, SecondaryFeeds } from './components/LiveFeeds';
 import MissionTimeline from './components/MissionTimeline';
 import MultiViewMonitor from './components/MultiViewMonitor';
 import SettingsPanel from './components/SettingsPanel';
 import HorizontalTimeline from './components/HorizontalTimeline';
-import MissionLog from './components/MissionLog';
 import NASANewsCard from './components/NASANewsCard';
 
 const INITIAL_LAUNCH_DATE = new Date('2026-02-07T02:41:00Z');
@@ -17,7 +16,6 @@ const STORAGE_KEY = 'artemis_mission_config_v3';
 const App: React.FC = () => {
   const [phase, setPhase] = useState<MissionPhase>(MissionPhase.PRE_LAUNCH);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [missionUpdates, setMissionUpdates] = useState<MissionUpdate[]>([]);
   
   const [isPhaseTransitioning, setIsPhaseTransitioning] = useState(false);
   const [displayPhase, setDisplayPhase] = useState<MissionPhase>(MissionPhase.PRE_LAUNCH);
@@ -119,11 +117,6 @@ const App: React.FC = () => {
     setVideoIds(newVideoIds);
   };
 
-  const addMissionUpdate = useCallback((message: string, source: string = 'SYSTEM', type: 'system' | 'comms' | 'telemetry' = 'comms') => {
-    const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    setMissionUpdates(prev => [{ time, source, message, type }, ...prev].slice(0, 50));
-  }, []);
-
   const countdownMs = useMemo(() => launchDate.getTime() - currentMs, [currentMs, launchDate]);
 
   return (
@@ -138,7 +131,6 @@ const App: React.FC = () => {
             setVideoIds(ids);
             setLaunchDate(newDate);
             setIsSettingsOpen(false);
-            addMissionUpdate('Mission parameters synchronized and cached in local storage.', 'SYSTEM', 'system');
           }} 
           onClose={() => setIsSettingsOpen(false)} 
         />
@@ -149,15 +141,8 @@ const App: React.FC = () => {
           <MissionHeader phase={displayPhase} setPhase={setPhase} countdownMs={countdownMs} onOpenSettings={() => setIsSettingsOpen(true)} />
         </div>
         <div className="flex-1 p-4 flex flex-col overflow-hidden max-h-full space-y-4">
-          <div className="grid grid-cols-12 gap-4 shrink-0">
-            <div className="col-span-12 lg:col-span-8 xl:col-span-9">
-              <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
-            </div>
-            <div className="col-span-12 lg:col-span-4 xl:col-span-3">
-              <div className="h-[200px] lg:h-full min-h-[200px]">
-                <MissionLog updates={missionUpdates} />
-              </div>
-            </div>
+          <div className="shrink-0 h-[140px]">
+            <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
           </div>
           <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
             <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-hidden pr-2 min-h-0">

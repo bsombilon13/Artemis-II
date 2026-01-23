@@ -28,7 +28,7 @@ interface Milestone {
 const MILESTONES: Milestone[] = [
   { 
     id: 0, 
-    label: "LAUNCH & ASCENT", 
+    label: "Launch and Ascent", 
     shortLabel: "LIFT",
     description: "The SLS rocket ignites and Orion begins its climb to Earth orbit.", 
     objective: "Execute nominal vertical ascent and achieve initial Earth orbit insertion.",
@@ -38,7 +38,7 @@ const MILESTONES: Milestone[] = [
   },
   { 
     id: 1, 
-    label: "HEO PERIGEE RAISE", 
+    label: "HEO Perigee Raise", 
     shortLabel: "HEO",
     description: "Engine burn to reach High Earth Orbit for 24 hours of system testing.", 
     objective: "Verify life support systems and proximity operations in high Earth orbit.",
@@ -48,7 +48,7 @@ const MILESTONES: Milestone[] = [
   },
   { 
     id: 2, 
-    label: "TRANSLUNAR INJECTION", 
+    label: "Translunar Injection", 
     shortLabel: "TLI",
     description: "The ICPS upper stage sends the crew on their trajectory toward the Moon.", 
     objective: "Perform high-delta-V burn to depart Earth SOI and intercept lunar gravity.",
@@ -58,7 +58,7 @@ const MILESTONES: Milestone[] = [
   },
   { 
     id: 3, 
-    label: "CLOSEST APPROACH (FLYBY)", 
+    label: "Lunar Flyby", 
     shortLabel: "FLYBY",
     description: "Orion passes behind the Moon, using gravity for a free return to Earth.", 
     objective: "Utilize lunar gravity for free-return trajectory and conduct farside observations.",
@@ -68,7 +68,7 @@ const MILESTONES: Milestone[] = [
   },
   { 
     id: 4, 
-    label: "TRANSEARTH COAST", 
+    label: "Transearth Coast", 
     shortLabel: "TEC",
     description: "The long journey back to Earth following the lunar gravity assist.", 
     objective: "Maintain thermal management and crew health during the 4-day transit back to Earth.",
@@ -78,7 +78,7 @@ const MILESTONES: Milestone[] = [
   },
   { 
     id: 5, 
-    label: "RE-ENTRY & SPLASHDOWN", 
+    label: "Re-entry and Splashdown", 
     shortLabel: "SPLASH",
     description: "Orion enters atmosphere and splashes down in the Pacific Ocean.", 
     objective: "Demonstrate heat shield performance at lunar re-entry speeds and safe crew recovery.",
@@ -141,6 +141,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
     return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
   }, [elapsedSeconds]);
 
+  // Synchronize detailed pop-up with the mission timeline
   useEffect(() => {
     if (isSynced) {
       setSelectedMilestone(currentActiveMilestone);
@@ -251,7 +252,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-2">
                     <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedMilestone.color }}></div>
-                    <h4 className="text-[10px] font-bold text-white mono uppercase tracking-widest">{selectedMilestone.label}</h4>
+                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{selectedMilestone.label}</h4>
                   </div>
                   {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
                     <div className="flex items-center space-x-1 mt-0.5">
@@ -263,21 +264,21 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
-              <p className="text-[8px] text-slate-400 mt-1 font-mono italic">"{selectedMilestone.description}"</p>
+              <p className="text-[8px] text-slate-400 mt-1 italic leading-tight">"{selectedMilestone.description}"</p>
               
               <div className="mt-3 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
                 <span className="text-[7px] text-blue-400 font-bold uppercase block tracking-widest mb-1">Primary Mission Objective</span>
-                <p className="text-[9px] text-slate-200 mono leading-tight">{selectedMilestone.objective}</p>
+                <p className="text-[9px] text-slate-200 leading-tight">{selectedMilestone.objective}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800">
                  <div>
                     <span className="text-[7px] text-blue-400 font-bold uppercase block">Technical Detail</span>
-                    <p className="text-[7px] text-slate-400 mono leading-tight">{selectedMilestone.missionFact}</p>
+                    <p className="text-[7px] text-slate-400 leading-tight">{selectedMilestone.missionFact}</p>
                  </div>
                  <div className="text-right">
                     <span className="text-[7px] text-slate-500 font-bold uppercase block">Relative MET</span>
-                    <p className="text-[7px] text-slate-500 mono">{selectedMilestone.t.toLocaleString()}s</p>
+                    <p className="text-[7px] text-slate-500 mono tabular-nums">{selectedMilestone.t.toLocaleString()}s</p>
                  </div>
               </div>
             </div>
@@ -292,7 +293,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20 min-h-0">
              <div className="flex flex-col min-h-full">
                {nasaUpdates.length === 0 && !newsLoading && (
-                 <div className="p-3 text-[9px] mono text-slate-600 italic">Listening for mission updates...</div>
+                 <div className="p-3 text-[9px] text-slate-600 italic">Listening for mission updates...</div>
                )}
                {nasaUpdates.map((update, idx) => (
                  <div 
@@ -300,7 +301,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                    className="p-3 border-b border-slate-800/40 hover:bg-white/[0.01] transition-colors last:border-0"
                  >
                    <div className="flex items-center justify-between mb-1">
-                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">DATA {idx.toString().padStart(2, '0')}</span>
+                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">Data {idx.toString().padStart(2, '0')}</span>
                      <span className="text-[7px] mono text-slate-600 uppercase tabular-nums">{update.timestamp}</span>
                    </div>
                    <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
@@ -310,7 +311,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                ))}
                {newsLoading && (
                  <div className="p-3 flex flex-col items-center justify-center space-y-2 py-6">
-                   <div className="w-3 h-3 border border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
+                   <div className="w-3 h-3 border border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
                    <span className="text-[7px] mono text-slate-600 uppercase tracking-widest">Polling</span>
                  </div>
                )}

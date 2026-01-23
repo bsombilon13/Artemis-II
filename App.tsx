@@ -9,6 +9,7 @@ import SettingsPanel from './components/SettingsPanel';
 import HorizontalTimeline from './components/HorizontalTimeline';
 
 const INITIAL_LAUNCH_DATE = new Date('2026-02-07T02:41:00Z');
+const HISTORY_LIMIT = 40;
 
 const App: React.FC = () => {
   const [phase, setPhase] = useState<MissionPhase>(MissionPhase.PRE_LAUNCH);
@@ -17,26 +18,14 @@ const App: React.FC = () => {
   
   // Track precise ms for the clock
   const [currentMs, setCurrentMs] = useState<number>(Date.now());
+  const [telemetryHistory, setTelemetryHistory] = useState<TelemetryData[]>([]);
   
   const elapsedSeconds = useMemo(() => {
     return (currentMs - launchDate.getTime()) / 1000;
   }, [currentMs, launchDate]);
   
-  const [videoIds, setVideoIds] = useState<string[]>(['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4']);
-
-  // Precise timer for ms display
-  useEffect(() => {
-    const timer = setInterval(() => {
-      const now = Date.now();
-      setCurrentMs(now);
-      
-      const currentElapsed = (now - launchDate.getTime()) / 1000;
-      if (currentElapsed >= 0 && currentElapsed < 600) setPhase(MissionPhase.ASCENT);
-      else if (currentElapsed >= 600 && currentElapsed < 172800) setPhase(MissionPhase.ORBIT);
-      else if (currentElapsed >= 172800) setPhase(MissionPhase.LUNAR_FLYBY);
-    }, 45); // ~22fps for smooth ms feel
-    return () => clearInterval(timer);
-  }, [launchDate]);
+  // 4 Video IDs: 1 primary, 3 secondary
+  const [videoIds, setVideoIds] = useState<string[]>(['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4', '21X5lGlDOfg']);
 
   // Derived Telemetry for HUD animations
   const telemetry = useMemo((): TelemetryData => {
@@ -65,6 +54,41 @@ const App: React.FC = () => {
       heartRate: 70 + Math.random() * 5
     };
   }, [elapsedSeconds]);
+
+  // Precise timer for ms display and history tracking
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = Date.now();
+      setCurrentMs(now);
+      
+      const currentElapsed = (now - launchDate.getTime()) / 1000;
+      if (currentElapsed >= 0 && currentElapsed < 600) setPhase(MissionPhase.ASCENT);
+      else if (currentElapsed >= 600 && currentElapsed < 172800) setPhase(MissionPhase.ORBIT);
+      else if (currentElapsed >= 172800) setPhase(MissionPhase.LUNAR_FLYBY);
+    }, 45); // ~22fps
+    return () => clearInterval(timer);
+  }, [launchDate]);
+
+  // Update telemetry history at a slower interval to keep graphs performant but fluid
+  useEffect(() => {
+    const historyTimer = setInterval(() => {
+      setTelemetryHistory(prev => {
+        const next = [...prev, telemetry];
+        if (next.length > HISTORY_LIMIT) return next.slice(1);
+        return next;
+      });
+    }, 1000); // Add a point every second
+    return () => clearInterval(historyTimer);
+  }, [telemetry]);
+
+  const handlePromoteToPrimary = (index: number) => {
+    const actualIndex = index + 1;
+    const newVideoIds = [...videoIds];
+    const temp = newVideoIds[0];
+    newVideoIds[0] = newVideoIds[actualIndex];
+    newVideoIds[actualIndex] = temp;
+    setVideoIds(newVideoIds);
+  };
 
   const countdownMs = useMemo(() => {
     return launchDate.getTime() - currentMs;
@@ -98,26 +122,23 @@ const App: React.FC = () => {
           <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
 
           <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
-            {/* Left Column (Video Feeds & Signal Status) */}
+            {/* Left Column (Video Feeds) */}
             <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-y-auto custom-scrollbar pr-2">
               <PrimaryFeed videoId={videoIds[0]} />
-              <SecondaryFeeds videoIds={videoIds.slice(1, 3)} forceSideBySide={true} />
-              
-              <div className="glass rounded-xl p-4 border border-slate-800 flex justify-between items-center bg-slate-900/40 shadow-inner">
-                <div className="flex flex-col">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">Signal Link Status</span>
-                  <span className="text-sm font-bold mono text-emerald-400">COMMAND_LOCKED_SECURE</span>
-                </div>
-                <div className="flex space-x-1.5">
-                   {[1,2,3,4,5,6].map(i => <div key={i} className={`w-1 h-5 ${i < 6 ? 'bg-blue-500 animate-pulse' : 'bg-slate-700'} rounded-full`}></div>)}
-                </div>
-              </div>
+              <SecondaryFeeds 
+                videoIds={videoIds.slice(1)} 
+                onPromote={handlePromoteToPrimary}
+              />
             </div>
 
             {/* Right Column (MultiViewMonitor Top, Timeline Bottom) */}
             <div className="col-span-12 lg:col-span-5 flex flex-col h-full min-h-0 space-y-4">
-               <div className="shrink-0 h-[400px]"> {/* Fixed height for the monitor container */}
-                  <MultiViewMonitor elapsedSeconds={elapsedSeconds} telemetry={telemetry} />
+               <div className="shrink-0 h-[400px]">
+                  <MultiViewMonitor 
+                    elapsedSeconds={elapsedSeconds} 
+                    telemetry={telemetry} 
+                    telemetryHistory={telemetryHistory}
+                  />
                </div>
                <div className="flex-1 flex flex-col min-h-0">
                   <MissionTimeline elapsedSeconds={elapsedSeconds} />

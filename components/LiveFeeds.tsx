@@ -3,7 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 
 interface SharedProps {
   videoIds: string[];
-  forceSideBySide?: boolean;
+  onPromote?: (idx: number) => void;
 }
 
 const getEmbedUrl = (id: string) => {
@@ -33,6 +33,7 @@ interface ControlProps {
   onTogglePlay: () => void;
   onVolumeChange: (val: number) => void;
   onToggleFullscreen: () => void;
+  onPromote?: () => void;
   size?: 'sm' | 'md' | 'xs';
 }
 
@@ -44,38 +45,47 @@ const ControlBar: React.FC<ControlProps> = ({
   onTogglePlay, 
   onVolumeChange, 
   onToggleFullscreen,
+  onPromote,
   size = 'md' 
 }) => {
   const isXS = size === 'xs';
-  const buttonClass = `bg-black/80 border border-slate-700 hover:border-blue-500 rounded text-slate-300 mono uppercase font-bold transition-all active:scale-95 ${
+  const buttonClass = `bg-black/80 border border-slate-700 hover:border-blue-500 rounded text-slate-300 mono uppercase font-bold transition-all active:scale-95 flex items-center justify-center ${
     isXS ? 'px-1 py-0.5 text-[6px]' : 'px-2 py-1 text-[10px]'
   }`;
 
   return (
-    <div className={`absolute bottom-2 right-2 flex items-center space-x-2 z-30 transition-opacity opacity-0 group-hover:opacity-100 bg-slate-950/80 backdrop-blur-sm p-1.5 rounded-lg border border-slate-800`}>
+    <div className={`absolute bottom-2 right-2 flex items-center space-x-1.5 z-30 transition-opacity opacity-0 group-hover:opacity-100 bg-slate-950/80 backdrop-blur-sm p-1 rounded-lg border border-slate-800 shadow-2xl`}>
+      {/* Swap/Promote to Primary */}
+      {onPromote && (
+        <button onClick={onPromote} className={`${buttonClass} bg-blue-600/20 border-blue-500/40 text-blue-400 hover:bg-blue-600/40`} title="Highlight this feed">
+           {isXS ? 'PRO' : 'PROMOTE'}
+        </button>
+      )}
+
       {/* Play/Pause */}
       <button onClick={onTogglePlay} className={buttonClass} aria-label={isPlaying ? "Pause" : "Play"}>
-        {isPlaying ? 'Pause' : 'Play'}
+        {isPlaying ? 'Pau' : 'Ply'}
       </button>
       
       {/* Mute/Unmute */}
       <button onClick={onToggleMute} className={buttonClass} aria-label={isMuted ? "Unmute" : "Mute"}>
-        {isMuted ? 'Unmute' : 'Mute'}
+        {isMuted ? 'Unm' : 'Mut'}
       </button>
 
       {/* Volume Slider */}
-      <div className="flex items-center space-x-1 px-1 border-l border-slate-800">
-        <span className="text-[8px] mono text-slate-500 font-bold">VOL</span>
-        <input 
-          type="range" 
-          min="0" 
-          max="100" 
-          value={isMuted ? 0 : volume} 
-          onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-          className="w-12 h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
-          aria-label="Volume"
-        />
-      </div>
+      {!isXS && (
+        <div className="flex items-center space-x-1 px-1 border-l border-slate-800">
+          <input 
+            type="range" 
+            min="0" 
+            max="100" 
+            value={isMuted ? 0 : volume} 
+            onChange={(e) => onVolumeChange(parseInt(e.target.value))}
+            className="w-10 h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
+            aria-label="Volume"
+          />
+        </div>
+      )}
 
       {/* Fullscreen */}
       <button 
@@ -127,9 +137,9 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 
   return (
     <div ref={containerRef} className="aspect-video glass rounded-xl overflow-hidden border border-slate-800 relative group bg-black shadow-2xl">
-      <div className="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[9px] font-bold mono text-white border border-white/10">
+      <div className="absolute top-3 left-3 z-20 flex items-center space-x-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold mono text-white border border-white/10">
         <span className="w-1.5 h-1.5 rounded-full bg-red-600 animate-pulse"></span>
-        <span>FEED 01: GROUND PRIMARY (SLC-39B)</span>
+        <span className="tracking-widest">FEED ALPHA: PRIMARY MISSION FEED</span>
       </div>
       
       <ControlBar 
@@ -145,7 +155,7 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 
       <iframe
         ref={iframeRef}
-        key={`feed-01-${videoId}`}
+        key={`primary-feed-${videoId}`}
         className="w-full h-full border-0 bg-black"
         src={getEmbedUrl(videoId)}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
@@ -155,13 +165,12 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
   );
 };
 
-export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, forceSideBySide = false }) => {
-  const titles = ['ORION EXTERIOR', 'INTERIM STAGE'];
-  const [muteStates, setMuteStates] = useState<boolean[]>([true, true]);
-  const [playStates, setPlayStates] = useState<boolean[]>([true, true]);
-  const [volumes, setVolumes] = useState<number[]>([50, 50]);
-  const iframeRefs = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
-  const containerRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
+export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) => {
+  const titles = ['EXTERIOR OPTICS', 'INSTRUMENT STAGE', 'LIVE TELEMETRY'];
+  const [muteStates, setMuteStates] = useState<boolean[]>([true, true, true]);
+  const [playStates, setPlayStates] = useState<boolean[]>([true, true, true]);
+  const iframeRefs = [useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null), useRef<HTMLIFrameElement>(null)];
+  const containerRefs = [useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null), useRef<HTMLDivElement>(null)];
 
   const toggleMute = (idx: number) => {
     sendCommand(iframeRefs[idx].current, muteStates[idx] ? 'unMute' : 'mute');
@@ -177,20 +186,6 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, forceSideBySid
     setPlayStates(newPlayStates);
   };
 
-  const handleVolumeChange = (idx: number, newVol: number) => {
-    const newVolumes = [...volumes];
-    newVolumes[idx] = newVol;
-    setVolumes(newVolumes);
-
-    if (muteStates[idx] && newVol > 0) {
-      sendCommand(iframeRefs[idx].current, 'unMute');
-      const newMuteStates = [...muteStates];
-      newMuteStates[idx] = false;
-      setMuteStates(newMuteStates);
-    }
-    sendCommand(iframeRefs[idx].current, 'setVolume', [newVol]);
-  };
-
   const toggleFullscreen = (idx: number) => {
     if (!document.fullscreenElement) {
       containerRefs[idx].current?.requestFullscreen();
@@ -200,32 +195,33 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, forceSideBySid
   };
 
   return (
-    <div className={`grid ${forceSideBySide ? 'grid-cols-2' : 'grid-cols-1 md:grid-cols-2'} gap-4`}>
+    <div className="grid grid-cols-3 gap-3">
       {videoIds.map((id, idx) => (
         <div 
-          key={`feed-wrapper-${idx}`} 
+          key={`secondary-feed-${idx}-${id}`} 
           ref={containerRefs[idx]} 
-          className="aspect-video glass rounded-lg overflow-hidden border border-slate-800 relative bg-black group shadow-lg"
+          className="aspect-video glass rounded-lg overflow-hidden border border-slate-800 relative bg-black group shadow-lg ring-1 ring-slate-800/50 hover:ring-blue-500/30 transition-all"
         >
-           <div className="absolute top-1.5 left-1.5 z-20 flex items-center space-x-1.5 bg-black/60 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] font-bold mono text-white border border-white/10">
+           <div className="absolute top-1.5 left-1.5 z-20 flex items-center space-x-1.5 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] font-bold mono text-slate-300 border border-white/5 group-hover:text-white transition-colors">
               <span className="w-1 h-1 rounded-full bg-blue-500"></span>
-              <span>F0{idx + 2}: {titles[idx]}</span>
+              <span>FEED {idx + 1}: {titles[idx] || 'AUXILIARY'}</span>
            </div>
 
            <ControlBar 
               isMuted={muteStates[idx]} 
               isPlaying={playStates[idx]} 
-              volume={volumes[idx]}
+              volume={50}
               onToggleMute={() => toggleMute(idx)} 
               onTogglePlay={() => togglePlay(idx)}
-              onVolumeChange={(val) => handleVolumeChange(idx, val)}
+              onVolumeChange={() => {}} // Not used for secondary
               onToggleFullscreen={() => toggleFullscreen(idx)}
+              onPromote={onPromote ? () => onPromote(idx) : undefined}
               size="xs" 
            />
 
            <iframe
               ref={iframeRefs[idx]}
-              key={`feed-${idx + 1}-${id}`}
+              key={`iframe-secondary-${idx}-${id}`}
               className="w-full h-full border-0 bg-black"
               src={getEmbedUrl(id)}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"

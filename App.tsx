@@ -10,7 +10,6 @@ import MissionLog from './components/MissionLog';
 import NASANewsCard from './components/NASANewsCard';
 
 const INITIAL_LAUNCH_DATE = new Date('2026-02-07T02:41:00Z');
-// 3 feeds: 1 Primary (Alpha) + 2 Secondary.
 const INITIAL_VIDEO_IDS = ['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4'];
 const HISTORY_LIMIT = 40;
 const STORAGE_KEY = 'artemis_mission_config_v3';
@@ -87,7 +86,6 @@ const App: React.FC = () => {
     return { timestamp: Date.now(), altitude: alt, velocity: vel, fuel: Math.max(0, 100 - (t / 100)), heartRate: 70 + Math.random() * 5 };
   }, [elapsedSeconds]);
 
-  // Global Sync Timer matching Trajectory Milestones
   useEffect(() => {
     const timer = setInterval(() => {
       const now = Date.now();
@@ -163,19 +161,16 @@ const App: React.FC = () => {
           </div>
           <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
             <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-y-auto custom-scrollbar pr-2 min-h-0">
-              {/* Top Row: Primary Video and News Feed tightly bound by height */}
               <div className="flex space-x-4 items-stretch shrink-0 min-h-0">
                 <div className="flex-1 min-h-0">
                   <PrimaryFeed videoId={videoIds[0]} />
                 </div>
-                {/* News Card is wrapped in an absolute container to prevent it from dictates the row height */}
                 <div className="w-72 shrink-0 hidden xl:block relative min-h-0 overflow-hidden">
                   <div className="absolute inset-0">
                     <NASANewsCard />
                   </div>
                 </div>
               </div>
-              
               <div className="shrink-0">
                 <SecondaryFeeds videoIds={videoIds.slice(1)} onPromote={handlePromoteToPrimary} />
               </div>

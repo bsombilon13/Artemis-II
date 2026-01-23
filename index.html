@@ -7,66 +7,94 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --slate-950: #020617;
+            --blue-500: #3b82f6;
+            --emerald-500: #10b981;
+        }
         body {
             margin: 0;
-            background-color: #020617;
-            color: #f8fafc;
+            background-color: var(--slate-950);
+            color: #f1f5f9; /* Brighter default text */
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .mono { font-family: 'JetBrains Mono', monospace; }
+        .mono { font-family: 'JetBrains Mono', monospace; font-weight: 500; }
         .glass {
-            background: rgba(15, 23, 42, 0.8);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .glow-red { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
-        .glow-blue { box-shadow: 0 0 15px rgba(59, 130, 246, 0.4); }
+        .glow-red { box-shadow: 0 0 20px rgba(239, 68, 68, 0.3); }
+        .glow-blue { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+        
+        /* Improved Scrollbars for visibility */
         ::-webkit-scrollbar {
-            width: 4px;
+            width: 6px;
+            height: 6px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a;
+            background: #020617;
         }
         ::-webkit-scrollbar-thumb {
             background: #334155;
             border-radius: 10px;
+            border: 1px solid #0f172a;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+
+        /* Better focus states for accessibility */
+        :focus-visible {
+            outline: 2px solid var(--blue-500);
+            outline-offset: 2px;
         }
 
         /* Mission Phase Transition Animations */
         @keyframes phaseIn {
-            0% { opacity: 0; transform: translateY(-10px) scale(0.98); filter: blur(8px); }
+            0% { opacity: 0; transform: translateY(-4px) scale(0.99); filter: blur(4px); }
             100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
         }
         
         @keyframes phaseOut {
             0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-            100% { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(8px); }
+            100% { opacity: 0; transform: translateY(4px) scale(0.99); filter: blur(4px); }
         }
 
         .animate-phase-in {
-            animation: phaseIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: phaseIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
         .animate-phase-out {
-            animation: phaseOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: phaseOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .custom-scrollbar::-webkit-scrollbar {
-            width: 4px;
+            width: 5px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
             background: rgba(15, 23, 42, 0.5);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #334155;
+            background: #475569;
             border-radius: 10px;
+        }
+        
+        /* Label Readability */
+        .text-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            font-weight: 700;
+            color: #94a3b8;
         }
     </style>
     <script>
-      // Shim process.env for browser environments
       window.process = window.process || { env: {} };
     </script>
 <script type="importmap">
@@ -77,8 +105,8 @@
     "react-dom/client": "https://esm.sh/react-dom@19.0.0/client",
     "recharts": "https://esm.sh/recharts@2.15.0",
     "@google/genai": "https://esm.sh/@google/genai@1.38.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
-    "react/": "https://esm.sh/react@^19.2.3/",
+    "react-dom/": "https://esm.sh/react-dom@^19.0.0/",
+    "react/": "https://esm.sh/react@^19.0.0/",
     "vite": "https://esm.sh/vite@^7.3.1",
     "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2"
   }

@@ -1,28 +1,18 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { MissionPhase, TelemetryData } from "../types";
 
-// Robust API Key retrieval
-const getApiKey = () => {
-  try {
-    return process.env.API_KEY || '';
-  } catch (e) {
-    return '';
-  }
-};
-
-const API_KEY = getApiKey();
-
-// Initialize AI lazily to avoid top-level crashes if process is weird
-const getAI = () => {
-  if (!API_KEY) {
-    console.warn("Gemini API: Mission Control is running in offline mode (API_KEY missing).");
+// Initialize AI dynamically to ensure the most current process.env.API_KEY is used
+const getAIInstance = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.warn("Gemini API: Mission Control API_KEY missing from environment.");
     return null;
   }
-  return new GoogleGenAI({ apiKey: API_KEY });
+  return new GoogleGenAI({ apiKey });
 };
 
 export const getMissionBriefing = async (phase: MissionPhase, telemetry: TelemetryData) => {
-  const ai = getAI();
+  const ai = getAIInstance();
   if (!ai) return "Status nominal. Telemetry stream stable.";
 
   try {
@@ -54,7 +44,6 @@ export const getMissionBriefing = async (phase: MissionPhase, telemetry: Telemet
 const extractJson = (text: string) => {
   if (!text) return "";
   try {
-    // Look for JSON block
     const regex = /\{[\s\S]*\}|\[[\s\S]*\]/;
     const match = text.match(regex);
     return match ? match[0] : text;
@@ -64,18 +53,19 @@ const extractJson = (text: string) => {
 };
 
 export const getLatestNASANews = async () => {
-  const ai = getAI();
+  const ai = getAIInstance();
   if (!ai) return [];
 
   try {
-    const prompt = "Search for the most recent official Artemis II mission updates exclusively from NASA. Provide a list of updates. Each update should include a brief timestamp/date if available and the update text itself.";
+    // Refined prompt to ensure search tool is triggered and returns official mission bulletins
+    const prompt = "Retrieve the latest official mission updates for NASA's Artemis II. Focus on real-world milestones, launch preparations, or crew activities from 2024 and 2025. Return a list of the most recent updates.";
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
       config: {
         tools: [{ googleSearch: {} }],
-        temperature: 0.2,
+        temperature: 0.1,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -85,8 +75,8 @@ export const getLatestNASANews = async () => {
               items: {
                 type: Type.OBJECT,
                 properties: {
-                  timestamp: { type: Type.STRING, description: "Date or time of the update" },
-                  content: { type: Type.STRING, description: "The text content of the mission update" }
+                  timestamp: { type: Type.STRING, description: "Date/Time of update (e.g., 'Feb 2025')" },
+                  content: { type: Type.STRING, description: "Official mission update text" }
                 },
                 required: ["timestamp", "content"]
               }
@@ -97,8 +87,8 @@ export const getLatestNASANews = async () => {
       }
     });
 
-    // Fix for TS2345: ensures extractJson receives a string, not string | undefined
-    const jsonStr = extractJson(response.text || "");
+    const textOutput = response.text || "";
+    const jsonStr = extractJson(textOutput);
     if (!jsonStr) return [];
 
     const parsed = JSON.parse(jsonStr);

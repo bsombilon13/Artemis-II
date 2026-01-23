@@ -7,7 +7,6 @@ interface SharedProps {
 
 const getEmbedUrl = (id: string) => {
   const origin = typeof window !== 'undefined' ? window.location.origin : '';
-  // Enhanced params for stability and control
   const params = new URLSearchParams({
     autoplay: '1',
     mute: '1',
@@ -15,10 +14,10 @@ const getEmbedUrl = (id: string) => {
     enablejsapi: '1',
     origin: origin,
     widget_referrer: origin,
-    iv_load_policy: '3', // Hide annotations
+    iv_load_policy: '3',
     modestbranding: '1',
     cc_load_policy: '0',
-    controls: '0' // We provide our own HUD
+    controls: '0'
   });
   return `https://www.youtube.com/embed/${id}?${params.toString()}`;
 };
@@ -63,58 +62,34 @@ const ControlBar: React.FC<ControlProps> = ({
   size = 'md' 
 }) => {
   const isXS = size === 'xs';
-  const buttonClass = `bg-black/80 border border-slate-700 hover:border-blue-500 rounded text-slate-300 mono uppercase font-bold transition-all active:scale-95 flex items-center justify-center hover:text-white ${
-    isXS ? 'px-1 py-0.5 text-[6px]' : 'px-2 py-1 text-[10px]'
+  const buttonClass = `bg-black/90 border border-white/20 hover:border-blue-500 rounded text-slate-100 mono uppercase font-black transition-all active:scale-90 flex items-center justify-center hover:bg-blue-600/20 ${
+    isXS ? 'px-1.5 py-1 text-[7px]' : 'px-3 py-1.5 text-[11px]'
   }`;
 
   return (
-    <div className={`absolute bottom-2 right-2 flex items-center space-x-1.5 z-30 transition-opacity opacity-0 group-hover:opacity-100 bg-slate-950/90 backdrop-blur-md p-1.5 rounded-lg border border-slate-800 shadow-2xl`}>
-      {/* Swap/Promote to Primary */}
+    <div className={`absolute bottom-3 right-3 flex items-center space-x-2 z-30 transition-all opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 bg-slate-900/95 backdrop-blur-xl p-2 rounded-xl border border-white/10 shadow-2xl`}>
       {onPromote && (
-        <button onClick={onPromote} className={`${buttonClass} bg-blue-600/20 border-blue-500/40 text-blue-400 hover:bg-blue-600/40`} title="Highlight this feed">
-           {isXS ? 'PRO' : 'PROMOTE'}
+        <button onClick={onPromote} className={`${buttonClass} bg-blue-600/40 border-blue-400/60 text-white hover:bg-blue-500`}>
+           {isXS ? 'PRM' : 'PROMOTE'}
         </button>
       )}
 
-      {/* Manual Refresh Link */}
-      <button onClick={onRefresh} className={buttonClass} title="Reset connection">
-        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button onClick={onRefresh} className={buttonClass} title="Reconnect Feed">
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
         </svg>
       </button>
 
-      {/* Play/Pause */}
-      <button onClick={onTogglePlay} className={buttonClass} aria-label={isPlaying ? "Pause" : "Play"}>
-        {isPlaying ? 'PAU' : 'PLY'}
+      <button onClick={onTogglePlay} className={buttonClass}>
+        {isPlaying ? 'PAUSE' : 'PLAY'}
       </button>
       
-      {/* Mute/Unmute */}
-      <button onClick={onToggleMute} className={buttonClass} aria-label={isMuted ? "Unmute" : "Mute"}>
-        {isMuted ? 'UNM' : 'MUT'}
+      <button onClick={onToggleMute} className={buttonClass}>
+        {isMuted ? 'UNMUTE' : 'MUTE'}
       </button>
 
-      {/* Volume Slider */}
-      {!isXS && (
-        <div className="flex items-center space-x-2 px-2 border-l border-slate-800">
-          <input 
-            type="range" 
-            min="0" 
-            max="100" 
-            value={isMuted ? 0 : volume} 
-            onChange={(e) => onVolumeChange(parseInt(e.target.value))}
-            className="w-12 h-1 bg-slate-800 rounded-full appearance-none cursor-pointer accent-blue-500"
-            aria-label="Volume"
-          />
-        </div>
-      )}
-
-      {/* Fullscreen */}
-      <button 
-        onClick={onToggleFullscreen} 
-        className={buttonClass} 
-        aria-label="Toggle Fullscreen"
-      >
-        <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <button onClick={onToggleFullscreen} className={buttonClass}>
+        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
         </svg>
       </button>
@@ -167,27 +142,26 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
   }, []);
 
   return (
-    <div ref={containerRef} className="aspect-video glass rounded-xl overflow-hidden border border-slate-800 relative group bg-black shadow-2xl">
-      {/* Connectivity Status HUD */}
-      <div className="absolute top-3 left-3 z-40 flex flex-col space-y-1">
-        <div className="flex items-center space-x-2 bg-black/70 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold mono text-white border border-white/10">
-          <span className={`w-1.5 h-1.5 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-red-600 animate-pulse shadow-[0_0_8px_rgba(220,38,38,0.5)]'}`}></span>
-          <span className="tracking-widest">FEED ALPHA: PRIMARY_MISSION_LINK</span>
+    <div ref={containerRef} className="aspect-video glass rounded-2xl overflow-hidden border border-white/10 relative group bg-black shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
+      {/* HUD Info */}
+      <div className="absolute top-4 left-4 z-40 flex flex-col space-y-2">
+        <div className="flex items-center space-x-3 bg-black/80 backdrop-blur-xl px-4 py-2 rounded-lg text-xs font-black mono text-white border border-white/20 shadow-xl">
+          <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-red-600 animate-pulse shadow-[0_0_12px_rgba(220,38,38,0.8)]'}`}></span>
+          <span className="tracking-[0.2em] uppercase font-black">STREAM_ALPHA: PRIMARY_UPLINK</span>
         </div>
         {!isLoading && (
-          <div className="flex items-center space-x-1.5 bg-blue-500/10 border border-blue-500/20 px-1.5 py-0.5 rounded animate-in fade-in duration-500">
-            <span className="text-[7px] mono text-blue-400 font-bold uppercase tracking-widest">Signal Stable // {Math.floor(Math.random() * 20 + 40)}ms</span>
+          <div className="flex items-center space-x-2 bg-blue-500/20 border border-blue-400/30 px-3 py-1 rounded-md animate-in fade-in slide-in-from-left-2 duration-700">
+            <span className="text-[9px] mono text-blue-300 font-bold uppercase tracking-widest">SIGNAL_LOCK_ACTIVE // 42.18ms_LATENCY</span>
           </div>
         )}
       </div>
       
-      {/* Loading Overlay */}
       {isLoading && (
-        <div className="absolute inset-0 z-30 bg-slate-950/80 flex flex-col items-center justify-center space-y-4">
-           <div className="w-12 h-12 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 z-30 bg-slate-950/90 flex flex-col items-center justify-center space-y-6">
+           <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin shadow-[0_0_30px_rgba(59,130,246,0.2)]"></div>
            <div className="flex flex-col items-center">
-             <span className="text-[10px] mono text-blue-400 font-bold animate-pulse uppercase tracking-[0.3em]">Establishing Uplink...</span>
-             <span className="text-[8px] mono text-slate-600 uppercase mt-1">Satellite Relay: GS-42</span>
+             <span className="text-sm mono text-blue-400 font-black animate-pulse uppercase tracking-[0.4em]">Establishing_Uplink</span>
+             <span className="text-[10px] mono text-slate-500 uppercase mt-2 font-bold">Deep Space Network Relay: Goldstone</span>
            </div>
         </div>
       )}
@@ -201,14 +175,14 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
         onVolumeChange={handleVolumeChange}
         onToggleFullscreen={toggleFullscreen}
         onRefresh={handleRefresh}
-        size="sm"
+        size="md"
       />
 
       <iframe
         ref={iframeRef}
         key={`primary-feed-${videoId}-${refreshKey}`}
         onLoad={() => setIsLoading(false)}
-        className={`w-full h-full border-0 bg-black transition-opacity duration-700 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
+        className={`w-full h-full border-0 bg-black transition-all duration-1000 ${isLoading ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
         src={embedUrl}
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         referrerPolicy="strict-origin-when-cross-origin"
@@ -218,8 +192,7 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 };
 
 export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) => {
-  // Reduced titles and states to 2 feeds
-  const titles = ['EXTERIOR OPTICS', 'INSTRUMENT STAGE'];
+  const titles = ['EXTERIOR_OPTICS_01', 'ORION_NAV_DECK'];
   const [muteStates, setMuteStates] = useState<boolean[]>([true, true]);
   const [playStates, setPlayStates] = useState<boolean[]>([true, true]);
   const [loadingStates, setLoadingStates] = useState<boolean[]>([true, true]);
@@ -230,16 +203,20 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
 
   const toggleMute = (idx: number) => {
     sendCommand(iframeRefs[idx].current, muteStates[idx] ? 'unMute' : 'mute');
-    const newMuteStates = [...muteStates];
-    newMuteStates[idx] = !muteStates[idx];
-    setMuteStates(newMuteStates);
+    setMuteStates(prev => {
+        const next = [...prev];
+        next[idx] = !prev[idx];
+        return next;
+    });
   };
 
   const togglePlay = (idx: number) => {
     sendCommand(iframeRefs[idx].current, playStates[idx] ? 'pauseVideo' : 'playVideo');
-    const newPlayStates = [...playStates];
-    newPlayStates[idx] = !playStates[idx];
-    setPlayStates(newPlayStates);
+    setPlayStates(prev => {
+        const next = [...prev];
+        next[idx] = !prev[idx];
+        return next;
+    });
   };
 
   const toggleFullscreen = (idx: number) => {
@@ -251,41 +228,32 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
   };
 
   const handleRefresh = (idx: number) => {
-    const newLoads = [...loadingStates];
-    newLoads[idx] = true;
-    setLoadingStates(newLoads);
-    
-    const newKeys = [...refreshKeys];
-    newKeys[idx] += 1;
-    setRefreshKeys(newKeys);
+    setLoadingStates(prev => { const next = [...prev]; next[idx] = true; return next; });
+    setRefreshKeys(prev => { const next = [...prev]; next[idx] += 1; return next; });
   };
 
   const handleLoad = (idx: number) => {
-    const newLoads = [...loadingStates];
-    newLoads[idx] = false;
-    setLoadingStates(newLoads);
+    setLoadingStates(prev => { const next = [...prev]; next[idx] = false; return next; });
   };
 
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-2 gap-4">
       {videoIds.map((id, idx) => (
         <div 
           key={`secondary-feed-${idx}-${id}`} 
           ref={containerRefs[idx]} 
-          className="aspect-video glass rounded-xl overflow-hidden border border-slate-800 relative bg-black group shadow-lg ring-1 ring-slate-800/50 hover:ring-blue-500/30 transition-all"
+          className="aspect-video glass rounded-xl overflow-hidden border border-white/10 relative bg-black group shadow-xl hover:ring-2 hover:ring-blue-500/50 transition-all duration-300"
         >
-           {/* Feed ID Overlay */}
-           <div className="absolute top-1.5 left-1.5 z-20 flex flex-col space-y-1">
-             <div className="flex items-center space-x-1.5 bg-black/80 backdrop-blur-md px-1.5 py-0.5 rounded text-[7px] font-bold mono text-slate-300 border border-white/5 group-hover:text-white transition-colors">
-                <span className={`w-1 h-1 rounded-full ${loadingStates[idx] ? 'bg-amber-500 animate-pulse' : 'bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]'}`}></span>
-                <span>FEED {idx + 1}: {titles[idx] || 'AUXILIARY'}</span>
+           <div className="absolute top-2 left-2 z-20">
+             <div className="flex items-center space-x-2 bg-black/90 backdrop-blur-xl px-3 py-1.5 rounded-lg text-[9px] font-black mono text-slate-100 border border-white/10 shadow-lg">
+                <span className={`w-1.5 h-1.5 rounded-full ${loadingStates[idx] ? 'bg-amber-500 animate-pulse' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'}`}></span>
+                <span className="uppercase tracking-widest">{titles[idx] || `AUX_FEED_0${idx + 1}`}</span>
              </div>
            </div>
 
-           {/* Loading Overlay */}
            {loadingStates[idx] && (
-             <div className="absolute inset-0 z-30 bg-slate-950/80 flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
+             <div className="absolute inset-0 z-30 bg-slate-950/90 flex items-center justify-center">
+                <div className="w-8 h-8 border-3 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
              </div>
            )}
 
@@ -306,7 +274,7 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
               ref={iframeRefs[idx]}
               key={`iframe-secondary-${idx}-${id}-${refreshKeys[idx]}`}
               onLoad={() => handleLoad(idx)}
-              className={`w-full h-full border-0 bg-black transition-opacity duration-700 ${loadingStates[idx] ? 'opacity-0' : 'opacity-100'}`}
+              className={`w-full h-full border-0 bg-black transition-all duration-700 ${loadingStates[idx] ? 'opacity-0 scale-105' : 'opacity-100 scale-100'}`}
               src={getEmbedUrl(id)}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
               referrerPolicy="strict-origin-when-cross-origin"

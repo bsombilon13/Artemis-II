@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { MissionPhase, TelemetryData } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -29,7 +29,7 @@ export const getMissionBriefing = async (phase: MissionPhase, telemetry: Telemet
 
 export const getLatestNASANews = async () => {
   try {
-    const prompt = "Search for the 5 most recent official Artemis II mission updates or news posts exclusively from NASA.gov or NASA's official social media channels. Provide a list of short, text-only snippets. Focus on mission status, hardware readiness, and crew training.";
+    const prompt = "Search for the most recent official Artemis II mission updates exclusively from NASA. Provide a list of updates. Each update should include a brief timestamp/date if available and the update text itself.";
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-pro-preview',
@@ -37,12 +37,30 @@ export const getLatestNASANews = async () => {
       config: {
         tools: [{ googleSearch: {} }],
         temperature: 0.2,
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            updates: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  timestamp: { type: Type.STRING, description: "Date or time of the update" },
+                  content: { type: Type.STRING, description: "The text content of the mission update" }
+                },
+                required: ["timestamp", "content"]
+              }
+            }
+          },
+          required: ["updates"]
+        }
       }
     });
 
-    return response.text || "Awaiting latest NASA telemetry and news uplink...";
+    return JSON.parse(response.text).updates;
   } catch (error) {
     console.error("Gemini News Error:", error);
-    return "Official NASA news feed currently unavailable. Systems nominal.";
+    return [];
   }
 };

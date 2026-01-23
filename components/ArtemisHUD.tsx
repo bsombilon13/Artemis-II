@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { TelemetryData } from '../types';
 
@@ -84,7 +83,7 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
 
       {/* 4. HUD Telemetry Overlay */}
       <div className="absolute inset-0 pointer-events-none z-10">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,255,0,0.01),rgba(0,0,255,0.02))] bg-[size:100%_2px,3px_100%] opacity-50"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.1)_50%),linear-gradient(90deg,rgba(255,0,0,0.02),rgba(0,0,255,0.02),rgba(0,0,255,0.02))] bg-[size:100%_2px,3px_100%] opacity-50"></div>
         
         {/* Flash Alerts for Staging */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 flex flex-col items-center z-50 pointer-events-none">
@@ -146,7 +145,10 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                 </div>
               )}
               {isLASSepFlash && (
-                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-4 h-16 bg-blue-400/20 blur-xl animate-[sepFlash_0.5s_ease-out_forwards]"></div>
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 w-8 h-8 flex items-center justify-center z-50">
+                   <div className="w-full h-full bg-blue-400/60 rounded-full animate-ping scale-150 blur-sm"></div>
+                   <div className="absolute w-2 h-24 bg-gradient-to-t from-blue-400/80 to-transparent animate-[laserBeam_0.3s_ease-out_forwards]"></div>
+                </div>
               )}
 
               {/* Capsule (Conical top) */}
@@ -177,6 +179,10 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             {/* Service Module (ESM) */}
             <div className="w-6 h-6 bg-slate-300/20 border-x border-slate-400/40 mx-auto -mt-px relative">
                <div className="absolute top-0 w-full h-px bg-slate-400/50"></div>
+               {/* Orion Sep Ring Flash */}
+               {isOrionSepFlash && (
+                 <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-px bg-emerald-400 animate-[ringExpand_0.6s_ease-out_forwards] blur-[1px]"></div>
+               )}
                {/* ESM Thrusters */}
                <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-2 h-2 bg-orange-500/10 blur-[2px] animate-pulse"></div>
             </div>
@@ -185,6 +191,10 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             <div className={`transition-all duration-[2500ms] ${isOrionSeparated ? 'translate-y-[150px] opacity-0 rotate-[15deg]' : ''}`}>
               <div className="w-8 h-12 bg-slate-300/10 border-x border-slate-400/20 mx-auto -mt-px relative">
                  <div className="absolute inset-x-0 bottom-0 h-4 bg-slate-400/20" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%)' }}></div>
+                 {/* Core Sep Ring Flash */}
+                 {isCoreSepFlash && (
+                   <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-16 h-px bg-orange-500 animate-[ringExpand_1s_ease-out_forwards] blur-[2px]"></div>
+                 )}
                  {/* ICPS Engine Burn (if active) */}
                  {isICPSActive && speedFactor > 0.1 && (
                     <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-4 h-12 bg-gradient-to-b from-blue-400/40 via-blue-500/10 to-transparent blur-md animate-pulse"></div>
@@ -206,6 +216,10 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                   className={`absolute top-12 -left-6 w-5 h-40 bg-slate-100/20 border border-slate-300/40 transition-all duration-[4000ms] ${isBoosterSeparated ? 'translate-x-[-150px] translate-y-[400px] rotate-[-45deg] opacity-0' : ''}`}
                 >
                   <div className="absolute top-0 w-full h-4 bg-slate-300/30" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+                  {/* Booster Sep Small Flash */}
+                  {isBoosterSepFlash && (
+                    <div className="absolute top-1/2 -right-2 w-4 h-4 bg-orange-500/40 rounded-full blur-md animate-ping"></div>
+                  )}
                   {!isBoosterSeparated && isAscent && (
                     <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-4 h-16 bg-gradient-to-b from-orange-500/60 to-transparent blur-lg animate-pulse"></div>
                   )}
@@ -215,16 +229,15 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                   className={`absolute top-12 -right-6 w-5 h-40 bg-slate-100/20 border border-slate-300/40 transition-all duration-[4000ms] ${isBoosterSeparated ? 'translate-x-[150px] translate-y-[400px] rotate-[45deg] opacity-0' : ''}`}
                 >
                   <div className="absolute top-0 w-full h-4 bg-slate-300/30" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+                  {/* Booster Sep Small Flash */}
+                  {isBoosterSepFlash && (
+                    <div className="absolute top-1/2 -left-2 w-4 h-4 bg-orange-500/40 rounded-full blur-md animate-ping"></div>
+                  )}
                   {!isBoosterSeparated && isAscent && (
                     <div className="absolute -bottom-12 left-1/2 -translate-x-1/2 w-4 h-16 bg-gradient-to-b from-orange-500/60 to-transparent blur-lg animate-pulse"></div>
                   )}
                 </div>
               </div>
-
-              {/* Separation Flash (Core) */}
-              {isCoreSepFlash && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-48 bg-orange-500/30 rounded-full blur-[40px] animate-[sepFlash_1s_ease-out_forwards] z-50"></div>
-              )}
 
               {/* Core Engine Exhaust */}
               {isAscent && (
@@ -287,10 +300,14 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             0% { transform: rotateY(var(--angle)) scaleX(0); opacity: 0; }
             100% { transform: rotateY(var(--angle)) scaleX(1); opacity: 1; }
         }
-        @keyframes sepFlash {
-            0% { opacity: 0; transform: scale(0.2); }
-            10% { opacity: 1; transform: scale(1.5); }
-            100% { opacity: 0; transform: scale(2.5); }
+        @keyframes ringExpand {
+            0% { transform: translateX(-50%) scaleX(0.5); opacity: 1; }
+            100% { transform: translateX(-50%) scaleX(2.5); opacity: 0; }
+        }
+        @keyframes laserBeam {
+            0% { transform: scaleY(0); opacity: 1; }
+            50% { opacity: 1; }
+            100% { transform: scaleY(2) translateY(-20px); opacity: 0; }
         }
         .preserve-3d { transform-style: preserve-3d; }
         .rotate-x-70 { transform: rotateX(80deg); }

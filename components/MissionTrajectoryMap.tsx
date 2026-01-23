@@ -1,10 +1,14 @@
-
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 import { getLatestNASANews } from '../services/geminiService';
 
 interface Props {
   elapsedSeconds: number;
   hideContainer?: boolean;
+}
+
+interface NASAUpdate {
+  timestamp: string;
+  content: string;
 }
 
 interface Milestone {
@@ -81,7 +85,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [isSynced, setIsSynced] = useState(true);
-  const [nasaNews, setNasaNews] = useState<string>("Connecting to NASA Command Link...");
+  const [nasaUpdates, setNasaUpdates] = useState<NASAUpdate[]>([]);
   const [newsLoading, setNewsLoading] = useState(false);
   
   const outboundPath = "M 21,34 C 25,25 35,20 50,25 C 65,30 80,45 75,60";
@@ -106,8 +110,10 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   const fetchNews = async () => {
     setNewsLoading(true);
-    const news = await getLatestNASANews();
-    setNasaNews(news);
+    const updates = await getLatestNASANews();
+    if (Array.isArray(updates)) {
+      setNasaUpdates(updates);
+    }
     setNewsLoading(false);
   };
 
@@ -252,27 +258,43 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           )}
         </div>
 
-        {/* NASA News Intelligence Side Panel */}
+        {/* NASA News Intelligence Side Panel - Structured and Scrollable */}
         <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden">
           <div className="px-3 py-2 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
             <span className="text-[8px] mono font-bold text-blue-400 tracking-tighter uppercase">NASA_INTEL_UPLINK</span>
             <div className={`w-1.5 h-1.5 rounded-full ${newsLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
           </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-4">
-             <div className="text-[9px] mono text-slate-400 leading-relaxed whitespace-pre-wrap selection:bg-blue-500/30">
-               {nasaNews}
+          <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20">
+             <div className="flex flex-col">
+               {nasaUpdates.length === 0 && !newsLoading && (
+                 <div className="p-3 text-[9px] mono text-slate-600 italic">Listening for mission updates...</div>
+               )}
+               {nasaUpdates.map((update, idx) => (
+                 <div 
+                   key={idx} 
+                   className="p-3 border-b border-slate-800/40 hover:bg-white/[0.01] transition-colors last:border-0"
+                 >
+                   <div className="flex items-center justify-between mb-1">
+                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">DATA_{idx.toString().padStart(2, '0')}</span>
+                     <span className="text-[7px] mono text-slate-600">{update.timestamp}</span>
+                   </div>
+                   <p className="text-[9px] mono text-slate-400 leading-relaxed font-medium">
+                     {update.content}
+                   </p>
+                 </div>
+               ))}
+               {newsLoading && (
+                 <div className="p-3 flex items-center space-x-2">
+                   <div className="w-1 h-1 bg-blue-500 animate-bounce"></div>
+                   <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>
+                   <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.4s]"></div>
+                 </div>
+               )}
              </div>
-             {newsLoading && (
-               <div className="flex items-center space-x-2 py-2">
-                 <div className="w-1 h-1 bg-blue-500 animate-bounce"></div>
-                 <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.2s]"></div>
-                 <div className="w-1 h-1 bg-blue-500 animate-bounce [animation-delay:0.4s]"></div>
-               </div>
-             )}
           </div>
           <div className="px-3 py-1.5 bg-slate-950/60 border-t border-slate-800 flex justify-between shrink-0">
-             <span className="text-[7px] mono text-slate-600">LINK: AR-II_NET</span>
-             <span className="text-[7px] mono text-slate-600">ST: {new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit' })}</span>
+             <span className="text-[7px] mono text-slate-600 uppercase">Status: Live</span>
+             <span className="text-[7px] mono text-slate-600 uppercase">Uptime: {Math.floor(elapsedSeconds / 60)}M</span>
           </div>
         </div>
       </div>

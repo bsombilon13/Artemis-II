@@ -52,13 +52,21 @@ const extractJson = (text: string) => {
   }
 };
 
+// Simple In-Memory Cache to prevent 429 Quota Exhaustion
+let newsCache: { data: any[], timestamp: number } | null = null;
+const CACHE_DURATION_MS = 15 * 60 * 1000; // 15 minutes cache for search-based news
+
 export const getLatestNASANews = async () => {
+  // Return cached data if still valid
+  if (newsCache && (Date.now() - newsCache.timestamp < CACHE_DURATION_MS)) {
+    return newsCache.data;
+  }
+
   const ai = getAIInstance();
   if (!ai) return [];
 
   try {
-    // Refined prompt to ensure search tool is triggered and returns official mission bulletins
-    const prompt = "Retrieve the latest official mission updates for NASA's Artemis II. Focus on real-world milestones, launch preparations, or crew activities from 2024 and 2025. Return a list of the most recent updates.";
+    const prompt = "Retrieve the 5 most recent official mission updates for NASA's Artemis II. Focus on technical milestones, launch preparations, or crew activities from 2024 and 2025. Return a clean list of updates.";
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -89,12 +97,25 @@ export const getLatestNASANews = async () => {
 
     const textOutput = response.text || "";
     const jsonStr = extractJson(textOutput);
-    if (!jsonStr) return [];
+    if (!jsonStr) return newsCache?.data || [];
 
     const parsed = JSON.parse(jsonStr);
-    return parsed.updates || [];
-  } catch (error) {
+    const updates = parsed.updates || [];
+    
+    // Update cache
+    newsCache = { data: updates, timestamp: Date.now() };
+    
+    return updates;
+  } catch (error: any) {
     console.error("Gemini News Error:", error);
-    return [];
+    
+    // If rate limited, return cached data if available
+    if (error?.message?.includes('429') || error?.status === 'RESOURCE_EXHAUSTED') {
+      console.warn("Gemini API: Rate limited. Serving cached data.");
+      if (newsCache) return newsCache.data;
+      throw new Error("RATE_LIMIT");
+    }
+    
+    return newsCache?.data || [];
   }
 };

@@ -10,16 +10,21 @@ const NASANewsCard: React.FC = () => {
   const [updates, setUpdates] = useState<NASAUpdate[]>([]);
   const [loading, setLoading] = useState(false);
   const [lastSync, setLastSync] = useState<string>("");
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const fetchNews = async () => {
     setLoading(true);
+    setIsRateLimited(false);
     try {
       const result = await getLatestNASANews();
       if (Array.isArray(result)) {
         setUpdates(result);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to fetch NASA news:", error);
+      if (error.message === 'RATE_LIMIT') {
+        setIsRateLimited(true);
+      }
     } finally {
       setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
       setLoading(false);
@@ -28,7 +33,8 @@ const NASANewsCard: React.FC = () => {
 
   useEffect(() => {
     fetchNews();
-    const interval = setInterval(fetchNews, 300000); // Refresh every 5 minutes
+    // Refresh every 20 minutes to respect quota
+    const interval = setInterval(fetchNews, 1200000); 
     return () => clearInterval(interval);
   }, []);
 
@@ -38,13 +44,16 @@ const NASANewsCard: React.FC = () => {
       <div className="h-10 bg-slate-900/95 px-3 flex items-center justify-between border-b border-slate-800 shrink-0">
         <div className="flex items-center space-x-2">
           <div className="relative flex h-2 w-2">
-            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${loading ? 'bg-blue-400' : 'bg-emerald-400'}`}></span>
-            <span className={`relative inline-flex rounded-full h-2 w-2 ${loading ? 'bg-blue-500' : 'bg-emerald-500'}`}></span>
+            <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${loading ? 'bg-blue-400' : isRateLimited ? 'bg-red-400' : 'bg-emerald-400'}`}></span>
+            <span className={`relative inline-flex rounded-full h-2 w-2 ${loading ? 'bg-blue-500' : isRateLimited ? 'bg-red-500' : 'bg-emerald-500'}`}></span>
           </div>
           <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">NASA Intel Feed</h3>
         </div>
         {loading && (
           <span className="text-[8px] mono text-blue-400 font-bold uppercase tracking-widest animate-pulse">Uplink</span>
+        )}
+        {isRateLimited && !loading && (
+          <span className="text-[8px] mono text-red-400 font-bold uppercase tracking-widest">Quota Limited</span>
         )}
       </div>
       

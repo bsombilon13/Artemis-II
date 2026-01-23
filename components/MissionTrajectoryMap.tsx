@@ -133,7 +133,8 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   useEffect(() => {
     fetchNews();
-    const newsInterval = setInterval(fetchNews, 600000); // 10 min refresh
+    // Refresh every 25 minutes to avoid hitting rate limits
+    const newsInterval = setInterval(fetchNews, 1500000); 
     return () => clearInterval(newsInterval);
   }, []);
 

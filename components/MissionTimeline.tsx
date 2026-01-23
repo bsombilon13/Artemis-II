@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useMemo } from 'react';
 import { TimelineEvent } from '../types';
 
@@ -6,7 +7,6 @@ interface Props {
   isCompressed?: boolean;
 }
 
-// Full dataset provided by user
 const MISSION_EVENTS: TimelineEvent[] = [
   { offsetSeconds: -177300, label: "Call to Stations", description: "The launch team arrives on their stations and the countdown begins" },
   { offsetSeconds: -175200, label: "Countdown Start", description: "The countdown clock begins" },
@@ -64,8 +64,7 @@ const MISSION_EVENTS: TimelineEvent[] = [
   { offsetSeconds: -10, label: "Engine Start Command", description: "GLS sends the command for core stage engine start" },
   { offsetSeconds: -6.36, label: "RS-25 Startup", description: "RS-25 engines startup" },
   { offsetSeconds: 0, label: "T-0: LIFTOFF", description: "Booster ignition, umbilical separation, and liftoff" },
-  // Ascent
-  { offsetSeconds: 9, label: "Tower Clear", description: "SLS clears the launch tower and initiates a roll/pitch maneuver" },
+  { offsetSeconds: 9, label: "Tower Clear", description: "SLS clears the launch tower" },
   { offsetSeconds: 56, label: "Supersonic", description: "SLS reaches supersonic speed" },
   { offsetSeconds: 70, label: "Max Q", description: "Maximum dynamic pressure" },
   { offsetSeconds: 128, label: "SRB Separation", description: "Solid Rocket Booster separation" },
@@ -77,22 +76,12 @@ const MISSION_EVENTS: TimelineEvent[] = [
   { offsetSeconds: 6477, label: "Apogee Raise Burn", description: "Apogee raise burn" },
   { offsetSeconds: 12255, label: "Orion/ICPS Separation", description: "Orion separates from ICPS" },
   { offsetSeconds: 16500, label: "Prox Ops Conclude", description: "Proximity operations conclude" },
-  { offsetSeconds: 18000, label: "ICPS Disposal Burn", description: "Disposal burn of ICPS into the Pacific Ocean" },
-  // Multi-day flight events simplified for display
-  { offsetSeconds: 92220, label: "Translunar Injection", description: "Flight Day 2: Translunar injection burn" },
-  { offsetSeconds: 173220, label: "CPR Demonstration", description: "Flight Day 3: Crew CPR demonstration" },
-  { offsetSeconds: 260340, label: "Lunar Flyby Review", description: "Flight Day 4: Review lunar flyby imaging plan" },
-  { offsetSeconds: 341940, label: "Lunar Sphere of Influence", description: "Orion enters lunar sphere of influence" },
-  { offsetSeconds: 421320, label: "Distance Record", description: "Flight Day 6: Orion’s crew will exceed the Apollo 13 distance" },
-  { offsetSeconds: 436980, label: "Closest Approach", description: "Closest approach to the Moon" },
-  { offsetSeconds: 503220, label: "SOI Exit", description: "Flight Day 7: Orion exits lunar sphere of influence" },
-  { offsetSeconds: 782220, label: "Re-entry Prep", description: "Flight Day 10: Entry checklist, donning entry suits" },
-  { offsetSeconds: 785580, label: "Service Module Separation", description: "Orion crew and service module separation" },
-  { offsetSeconds: 786780, label: "Entry Interface", description: "Entry interface, 400,000 feet above Earth" },
-  { offsetSeconds: 787560, label: "SPLASHDOWN", description: "Artemis II Splashdown in the Pacific Ocean" },
+  { offsetSeconds: 18000, label: "ICPS Disposal Burn", description: "Disposal burn of ICPS" },
+  { offsetSeconds: 92220, label: "Translunar Injection", description: "Flight Day 2: TLI burn" },
+  { offsetSeconds: 787560, label: "SPLASHDOWN", description: "Artemis II Splashdown" },
 ];
 
-const formatTime = (seconds: number) => {
+const formatTimeShort = (seconds: number) => {
   const abs = Math.abs(seconds);
   const h = Math.floor(abs / 3600);
   const m = Math.floor((abs % 3600) / 60);
@@ -128,22 +117,22 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
 
   return (
     <div className={`glass rounded-xl h-full border border-slate-800 flex flex-col overflow-hidden shadow-2xl ${isCompressed ? 'bg-slate-900/60' : 'bg-slate-900/40'}`}>
-      <div className={`bg-slate-900 border-b border-slate-800 flex items-center justify-between ${isCompressed ? 'px-3 py-2' : 'px-4 py-3'}`}>
+      <div className={`bg-slate-900 border-b border-slate-800 flex items-center justify-between ${isCompressed ? 'px-2 py-2' : 'px-4 py-3'}`}>
         <div className="flex flex-col">
-          <h3 className={`${isCompressed ? 'text-[8px]' : 'text-[10px]'} uppercase tracking-[0.2em] font-bold text-slate-500`}>Master Mission Timeline</h3>
-          {!isCompressed && <span className="text-[8px] text-blue-500 mono font-bold italic">AR-II NOMINAL FLIGHT SEQUENCE</span>}
+          <h3 className={`${isCompressed ? 'text-[8px]' : 'text-[10px]'} uppercase tracking-[0.2em] font-bold text-slate-500`}>Sequence</h3>
+          {!isCompressed && <span className="text-[8px] text-blue-500 mono font-bold italic">AR-II FLIGHT SEQUENCE</span>}
         </div>
         <div className={`${isCompressed ? 'px-1 py-0.5' : 'px-2 py-1'} bg-emerald-600/10 rounded border border-emerald-500/30`}>
-          <span className={`${isCompressed ? 'text-[7px]' : 'text-[10px]'} mono text-emerald-400 font-bold animate-pulse uppercase`}>{isCompressed ? 'SYNC' : 'Syncing...'}</span>
+          <span className={`${isCompressed ? 'text-[6px]' : 'text-[10px]'} mono text-emerald-400 font-bold animate-pulse uppercase`}>SYNC</span>
         </div>
       </div>
       
       <div 
         ref={scrollRef}
-        className="flex-1 overflow-y-auto p-0 scroll-smooth custom-scrollbar bg-slate-950/20"
+        className="flex-1 overflow-y-auto scroll-smooth custom-scrollbar bg-slate-950/20"
       >
         <div className={`relative ${isCompressed ? 'py-4' : 'py-10'}`}>
-          <div className={`absolute top-0 bottom-0 w-px bg-slate-800/50 ${isCompressed ? 'left-[24px]' : 'left-[34px]'}`}></div>
+          <div className={`absolute top-0 bottom-0 w-px bg-slate-800/50 ${isCompressed ? 'left-[18px]' : 'left-[34px]'}`}></div>
           
           <div className="space-y-0.5">
             {MISSION_EVENTS.map((event, idx) => {
@@ -155,60 +144,46 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
                   key={idx}
                   ref={isActive ? activeItemRef : null}
                   className={`relative flex items-center transition-all duration-500 ${
-                    isActive ? 'bg-blue-600/10 border-y border-blue-500/20 z-20 ' + (isCompressed ? 'py-3' : 'py-6 scale-[1.02]') : 'opacity-60'
-                  } ${isCompressed ? 'px-3 py-1' : 'px-6 py-2'}`}
+                    isActive ? 'bg-blue-600/10 border-y border-blue-500/20 z-20 ' + (isCompressed ? 'py-2' : 'py-6') : 'opacity-40'
+                  } ${isCompressed ? 'px-2 py-0.5' : 'px-6 py-2'}`}
                 >
-                  {/* Status Marker */}
                   <div className="relative flex items-center justify-center">
-                    {/* Pulsing ring for active item */}
                     {isActive && (
-                      <div className={`absolute rounded-full bg-blue-500/20 animate-ping ${isCompressed ? 'w-6 h-6' : 'w-10 h-10'}`}></div>
+                      <div className={`absolute rounded-full bg-blue-500/20 animate-ping ${isCompressed ? 'w-5 h-5' : 'w-10 h-10'}`}></div>
                     )}
-                    
                     <div className={`relative z-10 rounded-full flex items-center justify-center border transition-all duration-500 ${
                       isActive 
-                        ? (isCompressed ? 'w-4 h-4' : 'w-6 h-6') + ' bg-blue-500 border-blue-200 shadow-[0_0_20px_rgba(59,130,246,0.6)]' 
+                        ? (isCompressed ? 'w-3 h-3' : 'w-6 h-6') + ' bg-blue-500 border-blue-200' 
                         : isPast 
-                          ? (isCompressed ? 'w-2 h-2' : 'w-4 h-4') + ' bg-emerald-500 border-emerald-300 shadow-[0_0_10px_rgba(16,185,129,0.3)]' 
-                          : (isCompressed ? 'w-2 h-2' : 'w-4 h-4') + ' bg-slate-900 border-slate-700'
+                          ? (isCompressed ? 'w-1.5 h-1.5' : 'w-4 h-4') + ' bg-emerald-500 border-emerald-300' 
+                          : (isCompressed ? 'w-1.5 h-1.5' : 'w-4 h-4') + ' bg-slate-900 border-slate-700'
                     }`}>
-                      {isPast && !isCompressed && (
-                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={5} d="M5 13l4 4L19 7" />
-                        </svg>
-                      )}
-                      {isActive && <div className={`${isCompressed ? 'w-1.5 h-1.5' : 'w-2 h-2'} bg-white rounded-full`}></div>}
+                      {isActive && <div className={`${isCompressed ? 'w-1 h-1' : 'w-2 h-2'} bg-white rounded-full`}></div>}
                     </div>
                   </div>
 
-                  {/* Event Text */}
-                  <div className={`${isCompressed ? 'ml-3' : 'ml-6'} flex-1 overflow-hidden`}>
-                    <div className="flex items-baseline justify-between">
-                      <span className={`font-bold mono tracking-tight transition-colors truncate pr-2 ${
-                        isCompressed ? 'text-[9px]' : 'text-[11px]'
-                      } ${
-                        isActive ? 'text-white' : isPast ? 'text-slate-300' : 'text-slate-600'
-                      }`}>
-                        {event.label}
-                      </span>
-                      <span className={`mono tabular-nums transition-colors shrink-0 ${
-                        isCompressed ? 'text-[7px]' : 'text-[9px]'
-                      } ${
-                        isActive ? 'text-blue-400 font-bold' : 'text-slate-600'
-                      }`}>
-                        {formatTime(event.offsetSeconds)}
-                      </span>
-                    </div>
-                    {isActive && !isCompressed && (
-                      <div className="mt-1.5 animate-in slide-in-from-left-2 duration-300">
-                        <p className="text-[10px] text-slate-400 leading-tight italic">
-                          {event.description}
-                        </p>
-                        <div className="mt-2 h-0.5 w-12 bg-blue-500/40 rounded-full overflow-hidden">
-                           <div className="h-full bg-blue-400 animate-[progress_2s_linear_infinite]" style={{ width: '100%' }}></div>
-                        </div>
+                  <div className={`${isCompressed ? 'ml-2' : 'ml-6'} flex-1 overflow-hidden`}>
+                    <div className="flex flex-col">
+                      <div className="flex items-center justify-between">
+                        <span className={`font-bold mono tracking-tight transition-colors truncate pr-1 ${
+                          isCompressed ? 'text-[8px]' : 'text-[11px]'
+                        } ${
+                          isActive ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-600'
+                        }`}>
+                          {event.label}
+                        </span>
+                        {isActive && (
+                           <span className={`mono tabular-nums shrink-0 ${isCompressed ? 'text-[7px]' : 'text-[9px]'} text-blue-400 font-bold`}>
+                              {formatTimeShort(event.offsetSeconds)}
+                           </span>
+                        )}
                       </div>
-                    )}
+                      {isActive && isCompressed && (
+                         <div className="mt-0.5 h-[1px] w-full bg-blue-500/30 overflow-hidden">
+                            <div className="h-full bg-blue-400 animate-[progress_3s_linear_infinite]" style={{ width: '100%' }}></div>
+                         </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
@@ -217,12 +192,10 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
         </div>
       </div>
       
-      {!isCompressed && (
-        <div className="bg-slate-900/90 px-4 py-2 border-t border-slate-800 flex justify-between items-center text-[9px] mono text-slate-500 uppercase tracking-widest">
-          <span>Artemis II Command Suite</span>
-          <span>SYSTEM_EPOCH: {Math.floor(Date.now() / 1000)}</span>
-        </div>
-      )}
+      <div className={`bg-slate-900/90 ${isCompressed ? 'px-2 py-1' : 'px-4 py-2'} border-t border-slate-800 flex justify-between items-center ${isCompressed ? 'text-[6px]' : 'text-[9px]'} mono text-slate-500 uppercase tracking-widest`}>
+        <span>AR-II</span>
+        <span>EP_{Math.floor(Date.now() / 100000)}</span>
+      </div>
 
       <style>{`
         @keyframes progress {

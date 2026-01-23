@@ -1,4 +1,3 @@
-
 import { GoogleGenAI } from "@google/genai";
 import { MissionPhase, TelemetryData } from "../types";
 
@@ -25,5 +24,25 @@ export const getMissionBriefing = async (phase: MissionPhase, telemetry: Telemet
   } catch (error) {
     console.error("Gemini Briefing Error:", error);
     return "Telemetry link stable. Continuing observation.";
+  }
+};
+
+export const getLatestNASANews = async () => {
+  try {
+    const prompt = "Search for the 5 most recent official Artemis II mission updates or news posts exclusively from NASA.gov or NASA's official social media channels. Provide a list of short, text-only snippets. Focus on mission status, hardware readiness, and crew training.";
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-3-pro-preview',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }],
+        temperature: 0.2,
+      }
+    });
+
+    return response.text || "Awaiting latest NASA telemetry and news uplink...";
+  } catch (error) {
+    console.error("Gemini News Error:", error);
+    return "Official NASA news feed currently unavailable. Systems nominal.";
   }
 };

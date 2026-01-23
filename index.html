@@ -54,21 +54,21 @@
         }
 
         @keyframes phaseIn {
-            0% { opacity: 0; transform: translateY(-4px) scale(0.99); filter: blur(4px); }
-            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            0% { opacity: 0; transform: translateY(-2px); filter: blur(2px); }
+            100% { opacity: 1; transform: translateY(0); filter: blur(0); }
         }
         
         @keyframes phaseOut {
-            0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
-            100% { opacity: 0; transform: translateY(4px) scale(0.99); filter: blur(4px); }
+            0% { opacity: 1; transform: translateY(0); filter: blur(0); }
+            100% { opacity: 0; transform: translateY(2px); filter: blur(2px); }
         }
 
         .animate-phase-in {
-            animation: phaseIn 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: phaseIn 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
         
         .animate-phase-out {
-            animation: phaseOut 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            animation: phaseOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         .custom-scrollbar::-webkit-scrollbar {

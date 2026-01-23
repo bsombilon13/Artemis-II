@@ -273,26 +273,69 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
         </div>
       </div>
 
-      {/* Dynamic Telemetry Metric Overlays */}
-      <div className="absolute bottom-8 left-10 space-y-6 z-20 pointer-events-none">
-        <div className="flex flex-col">
-          <span className="text-[10px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80">Pitch Elevation</span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-4xl mono text-white font-black tabular-nums">
-              {pitchAngle.toFixed(1)}°
-            </span>
-            <span className="text-[12px] text-slate-600 mono font-black">DEG</span>
+      {/* Dynamic Telemetry Metric Overlays with Animated Meters */}
+      <div className="absolute bottom-8 left-10 space-y-5 z-20 pointer-events-none">
+        
+        {/* Metric: Pitch */}
+        <div className="flex flex-col group">
+          <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Vehicle Pitch</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-baseline">
+              <span className="text-4xl mono text-white font-black tabular-nums animate-telemetry-glow">
+                {pitchAngle.toFixed(1)}°
+              </span>
+              <span className="text-[10px] text-slate-600 mono font-black ml-1">DEG</span>
+            </div>
+            {/* Meter Bar */}
+            <div className="w-24 h-1 bg-slate-800 rounded-full overflow-hidden self-center ml-2 border border-white/5">
+              <div 
+                className="h-full bg-slate-400 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(255,255,255,0.3)]"
+                style={{ width: `${(pitchAngle / 90) * 100}%` }}
+              ></div>
+            </div>
           </div>
         </div>
-        <div className="flex flex-col">
-          <span className="text-[10px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80">Scalar Vel</span>
-          <div className="flex items-baseline space-x-2">
-            <span className="text-4xl mono text-blue-400 font-black tabular-nums">
-              {velocity.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </span>
-            <span className="text-[12px] text-slate-600 mono font-black">KM/H</span>
+
+        {/* Metric: Velocity */}
+        <div className="flex flex-col group">
+          <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Scalar Vel</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-baseline">
+              <span className="text-4xl mono text-blue-400 font-black tabular-nums animate-telemetry-glow">
+                {velocity.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </span>
+              <span className="text-[10px] text-slate-600 mono font-black ml-1">KM/H</span>
+            </div>
+            {/* Meter Bar */}
+            <div className="w-32 h-1 bg-slate-950 rounded-full overflow-hidden self-center ml-2 border border-blue-500/20 shadow-inner">
+              <div 
+                className="h-full bg-blue-500 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(59,130,246,0.6)]"
+                style={{ width: `${Math.min(100, (velocity / 28000) * 100)}%` }}
+              ></div>
+            </div>
           </div>
         </div>
+
+        {/* Metric: Altitude */}
+        <div className="flex flex-col group">
+          <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Altitude MSL</span>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-baseline">
+              <span className="text-4xl mono text-emerald-400 font-black tabular-nums animate-telemetry-glow">
+                {altitude.toLocaleString(undefined, { maximumFractionDigits: 1 })}
+              </span>
+              <span className="text-[10px] text-slate-600 mono font-black ml-1">KM</span>
+            </div>
+            {/* Meter Bar */}
+            <div className="w-40 h-1 bg-slate-950 rounded-full overflow-hidden self-center ml-2 border border-emerald-500/20 shadow-inner">
+              <div 
+                className="h-full bg-emerald-500 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(16,185,129,0.6)]"
+                style={{ width: `${Math.min(100, (altitude / 400) * 100)}%` }}
+              ></div>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <style>{`
@@ -313,6 +356,14 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
         @keyframes debris-fly {
           0% { transform: translate(0, 0); opacity: 1; }
           100% { transform: translate(var(--vx), var(--vy)); opacity: 0; }
+        }
+        @keyframes telemetry-glow-pulse {
+          0% { filter: drop-shadow(0 0 0px currentColor); }
+          50% { filter: drop-shadow(0 0 4px currentColor); opacity: 0.95; }
+          100% { filter: drop-shadow(0 0 0px currentColor); }
+        }
+        .animate-telemetry-glow {
+          animation: telemetry-glow-pulse 2s ease-in-out infinite;
         }
         .preserve-3d { transform-style: preserve-3d; }
         .ease-out-expo { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }

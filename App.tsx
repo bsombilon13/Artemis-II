@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { MissionPhase, TelemetryData } from './types';
 import MissionHeader from './components/MissionHeader';
@@ -64,13 +63,15 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }, [videoIds, launchDate]);
 
+  // Phase transition handling logic
   useEffect(() => {
     if (phase !== displayPhase) {
       setIsPhaseTransitioning(true);
+      // Wait for exit animation to complete (0.4s)
       const timer = setTimeout(() => {
         setDisplayPhase(phase);
         setIsPhaseTransitioning(false);
-      }, 400); 
+      }, 450); 
       return () => clearTimeout(timer);
     }
   }, [phase, displayPhase]);
@@ -138,19 +139,19 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <div className={isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}>
+        <div 
+          key={`header-transition-${displayPhase}`}
+          className={isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}
+        >
           <MissionHeader phase={displayPhase} setPhase={setPhase} countdownMs={countdownMs} onOpenSettings={() => setIsSettingsOpen(true)} />
         </div>
         
         <div className="flex-1 p-4 flex flex-col overflow-hidden space-y-4">
-          {/* Top Section: Progress Bar */}
           <div className="shrink-0">
             <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
           </div>
 
-          {/* Main Dashboard Grid */}
           <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">
-            {/* Left Column: Video Feeds (Primary + Aux) */}
             <div className="col-span-12 lg:col-span-7 flex flex-col h-full min-h-0 space-y-4">
               <div className="flex space-x-4 h-full min-h-0">
                 <div className="flex-1 min-h-0">
@@ -167,12 +168,14 @@ const App: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Column: Monitors and Logs (Height Aligned with Left Column) */}
             <div className="col-span-12 lg:col-span-5 flex h-full min-h-0 space-x-4">
               <div className="flex-1 min-h-0 h-full">
                 <MultiViewMonitor elapsedSeconds={elapsedSeconds} telemetry={telemetry} telemetryHistory={telemetryHistory} />
               </div>
-              <div className={`w-64 shrink-0 h-full min-h-0 ${isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`}>
+              <div 
+                key={`timeline-transition-${displayPhase}`}
+                className={`w-64 shrink-0 h-full min-h-0 ${isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`}
+              >
                 <MissionTimeline elapsedSeconds={elapsedSeconds} isCompressed={true} />
               </div>
             </div>

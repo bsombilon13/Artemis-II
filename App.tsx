@@ -160,7 +160,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="flex-1 grid grid-cols-12 gap-4 overflow-hidden">
-            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-y-auto custom-scrollbar pr-2 min-h-0">
+            <div className="col-span-12 lg:col-span-7 flex flex-col space-y-4 overflow-hidden pr-2 min-h-0">
               <div className="flex space-x-4 items-stretch shrink-0 min-h-0">
                 <div className="flex-1 min-h-0">
                   <PrimaryFeed videoId={videoIds[0]} />

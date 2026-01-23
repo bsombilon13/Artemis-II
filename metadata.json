@@ -1,0 +1,5 @@
+{
+  "name": "Artemis II Mission Control",
+  "description": "A high-fidelity command center tracker for the Artemis II mission, featuring real-time telemetry visualizations, mission phase tracking, and customizable live feeds.",
+  "requestFramePermissions": []
+}

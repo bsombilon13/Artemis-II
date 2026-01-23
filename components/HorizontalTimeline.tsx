@@ -46,7 +46,7 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
   };
 
   return (
-    <div className="glass rounded-xl p-5 border border-slate-800 shadow-2xl mb-4 relative overflow-hidden group">
+    <div className="glass rounded-xl p-5 border border-slate-800 shadow-2xl h-full relative overflow-hidden group">
       {/* Background Decorative Element */}
       <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none select-none">
         <span className="text-6xl font-bold mono">NAV-01</span>

@@ -46,7 +46,23 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
       {/* Top Bar */}
       <div className="px-6 py-4 flex items-center justify-between border-b border-slate-800/50">
         <div className="flex items-center space-x-6">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" alt="NASA" className="w-10" />
+          <div className="flex items-center space-x-4">
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" 
+              alt="NASA" 
+              className="w-10 h-auto object-contain" 
+            />
+            <img 
+              src="https://upload.wikimedia.org/wikipedia/commons/e/e2/Artemis_program_%28original_with_wordmark%29.svg" 
+              alt="Artemis" 
+              className="w-10 h-auto object-contain" 
+            />
+            <img 
+              src="https://www3.nasa.gov/send-your-name-with-artemis/img/logo--rocket.png" 
+              alt="Mission" 
+              className="w-10 h-auto object-contain" 
+            />
+          </div>
           <div className="h-8 w-px bg-slate-800"></div>
           <div>
             <h1 className="text-xl font-bold tracking-tighter mono leading-none">ARTEMIS II</h1>

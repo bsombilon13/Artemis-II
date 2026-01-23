@@ -35,6 +35,36 @@
             background: #334155;
             border-radius: 10px;
         }
+
+        /* Mission Phase Transition Animations */
+        @keyframes phaseIn {
+            0% { opacity: 0; transform: translateY(-10px) scale(0.98); filter: blur(8px); }
+            100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+        }
+        
+        @keyframes phaseOut {
+            0% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+            100% { opacity: 0; transform: translateY(10px) scale(0.98); filter: blur(8px); }
+        }
+
+        .animate-phase-in {
+            animation: phaseIn 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+        
+        .animate-phase-out {
+            animation: phaseOut 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.5);
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 10px;
+        }
     </style>
 <script type="importmap">
 {

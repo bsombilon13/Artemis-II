@@ -96,7 +96,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   const [newsLoading, setNewsLoading] = useState(false);
   const [lastSync, setLastSync] = useState("");
   
-  // Refined Artemis II "Free-Return" Figure-8 Style Path
   const outboundPath = "M 21,34 C 23,28 35,20 50,22 C 65,25 78,45 82,58 C 84,65 78,68 75,60";
   const returnPath = "M 75,60 C 72,52 65,75 45,70 C 30,65 22,45 18,38";
   
@@ -142,7 +141,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
     return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
   }, [elapsedSeconds]);
 
-  // Synchronize detailed pop-up with the mission timeline
   useEffect(() => {
     if (isSynced) {
       setSelectedMilestone(currentActiveMilestone);
@@ -151,15 +149,15 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   const soiStatusText = useMemo(() => {
     const t = elapsedSeconds;
-    if (t < 0) return 'PRE-LAUNCH';
-    if (t < 486) return 'POWERED_ASCENT';
-    if (t < 2940) return 'EARTH_ORBIT';
-    if (t < 92220) return 'HEO_TEST_PHASE';
-    if (t < 430000) return 'TRANSLUNAR_COAST';
-    if (t < 445000) return 'LUNAR_ENCOUNTER';
-    if (t < 780000) return 'TRANSEARTH_COAST';
-    if (t < 787560) return 'ATMOS_REENTRY';
-    return 'MISSION_COMPLETE';
+    if (t < 0) return 'Pre-Launch';
+    if (t < 486) return 'Powered Ascent';
+    if (t < 2940) return 'Earth Orbit';
+    if (t < 92220) return 'HEO Test Phase';
+    if (t < 430000) return 'Translunar Coast';
+    if (t < 445000) return 'Lunar Encounter';
+    if (t < 780000) return 'Transearth Coast';
+    if (t < 787560) return 'Atmospheric Re-entry';
+    return 'Mission Complete';
   }, [elapsedSeconds]);
 
   const distanceKm = useMemo(() => {
@@ -184,7 +182,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           <div className="flex items-center space-x-3 mt-1">
              <div className="flex items-center space-x-1">
                <div className="w-2 h-0.5 bg-emerald-500/50"></div>
-               <span className="text-[8px] mono text-slate-500 uppercase tracking-tighter">Nominal_Trajectory</span>
+               <span className="text-[8px] mono text-slate-500 uppercase tracking-tighter">Nominal Trajectory</span>
              </div>
              <div className="flex items-center space-x-1">
                <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></div>
@@ -197,12 +195,11 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           className={`px-2 py-1 rounded text-[8px] mono border transition-all flex items-center space-x-2 ${isSynced ? 'bg-blue-600/10 border-blue-500/30 text-blue-400' : 'bg-slate-800 text-slate-500 border-slate-700'}`}
         >
           <span className={`w-1 h-1 rounded-full ${isSynced ? 'bg-blue-400 animate-pulse' : 'bg-slate-600'}`}></span>
-          <span>{isSynced ? 'AUTO_SYNC' : 'MANUAL'}</span>
+          <span>{isSynced ? 'Auto Sync' : 'Manual'}</span>
         </button>
       </div>
 
       <div className="flex-1 flex space-x-4 min-h-0 overflow-hidden">
-        {/* SVG Map Section */}
         <div className="relative flex-1 bg-slate-950/80 rounded-xl border border-slate-800/50 overflow-hidden shadow-inner">
           <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(rgba(59,130,246,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.1)_1px,transparent_1px)] bg-[size:40px_40px]"></div>
           
@@ -212,20 +209,16 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               <radialGradient id="moonGrad"><stop offset="0%" stopColor="#f1f5f9" /><stop offset="100%" stopColor="#1e293b" /></radialGradient>
             </defs>
 
-            {/* Background Paths */}
             <path d={outboundPath} fill="none" stroke="#10b981" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
             <path d={returnPath} fill="none" stroke="#3b82f6" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
             
-            {/* Real Progress Path Track */}
             <path ref={pathRef} d={fullPathD} fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="0.8" />
 
-            {/* Earth Reference */}
             <g transform="translate(20, 35)">
                <circle r="7" fill="url(#earthGrad)" stroke="#3b82f6" strokeWidth="0.2" className="opacity-80" />
                <text y="12" textAnchor="middle" className="text-[3px] mono fill-blue-400/60 font-bold uppercase tracking-widest">Earth</text>
             </g>
 
-            {/* Moon Reference */}
             <g transform="translate(75, 60)">
                <circle r="5" fill="url(#moonGrad)" stroke="#94a3b8" strokeWidth="0.2" className="opacity-80" />
                <text y="10" textAnchor="middle" className="text-[3px] mono fill-slate-400 font-bold uppercase tracking-widest">The Moon</text>
@@ -244,7 +237,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               );
             })}
 
-            {/* Orion Indicator */}
             {progress > 0 && progress < 1 && (
               <g transform={`translate(${indicatorPos.x}, ${indicatorPos.y}) rotate(${indicatorPos.angle})`}>
                 <path d="M -1.5,-1 L 2,0 L -1.5,1 Z" fill="#fff" stroke="#3b82f6" strokeWidth="0.3" />
@@ -253,7 +245,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
             )}
           </svg>
 
-          {/* Milestone Details Overlay */}
           {selectedMilestone && (
             <div className="absolute top-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 z-50 overflow-y-auto max-h-[80%] custom-scrollbar">
               <div className="flex justify-between items-start">
@@ -264,7 +255,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                   </div>
                   {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
                     <div className="flex items-center space-x-1 mt-0.5">
-                      <span className="text-[7px] mono text-emerald-400 font-bold animate-pulse">● LIVE_TRACKING</span>
+                      <span className="text-[7px] mono text-emerald-400 font-bold animate-pulse">● Live Tracking</span>
                     </div>
                   )}
                 </div>
@@ -293,10 +284,9 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           )}
         </div>
 
-        {/* NASA News Intelligence Side Panel - Strictly Stationary & Scrollable */}
         <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden min-h-0">
           <div className="h-9 px-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
-            <span className="text-[8px] mono font-bold text-blue-400 tracking-tighter uppercase">NASA_INTEL_UPLINK</span>
+            <span className="text-[8px] font-bold text-blue-400 tracking-tighter uppercase">NASA Intel Uplink</span>
             <div className={`w-1.5 h-1.5 rounded-full ${newsLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20 min-h-0">
@@ -310,10 +300,10 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                    className="p-3 border-b border-slate-800/40 hover:bg-white/[0.01] transition-colors last:border-0"
                  >
                    <div className="flex items-center justify-between mb-1">
-                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">DATA_{idx.toString().padStart(2, '0')}</span>
+                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">DATA {idx.toString().padStart(2, '0')}</span>
                      <span className="text-[7px] mono text-slate-600 uppercase tabular-nums">{update.timestamp}</span>
                    </div>
-                   <p className="text-[9px] mono text-slate-400 leading-relaxed font-medium">
+                   <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
                      {update.content}
                    </p>
                  </div>
@@ -321,13 +311,13 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                {newsLoading && (
                  <div className="p-3 flex flex-col items-center justify-center space-y-2 py-6">
                    <div className="w-3 h-3 border border-blue-500/30 border-t-blue-500 rounded-full animate-spin"></div>
-                   <span className="text-[7px] mono text-slate-600 uppercase">Polling...</span>
+                   <span className="text-[7px] mono text-slate-600 uppercase tracking-widest">Polling</span>
                  </div>
                )}
              </div>
           </div>
           <div className="h-7 px-3 bg-slate-950/60 border-t border-slate-800 flex justify-between items-center shrink-0">
-             <span className="text-[7px] mono text-slate-600 uppercase">Status: Live</span>
+             <span className="text-[7px] text-slate-600 uppercase font-bold tracking-widest">Status Live</span>
              <span className="text-[7px] mono text-slate-500 uppercase tabular-nums">{lastSync}</span>
           </div>
         </div>
@@ -344,7 +334,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
         </div>
         <div className="glass p-2 rounded-lg border border-slate-800/50 bg-slate-950/40">
            <span className="text-[7px] text-slate-500 uppercase block font-bold">Nav Lock</span>
-           <span className="text-[10px] mono text-slate-300 font-bold">{isSynced ? 'DSN_NOMINAL' : 'MANUAL_OVERRIDE'}</span>
+           <span className="text-[10px] text-slate-300 font-bold uppercase">{isSynced ? 'DSN Nominal' : 'Manual Override'}</span>
         </div>
       </div>
     </div>

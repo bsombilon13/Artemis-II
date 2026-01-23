@@ -48,12 +48,12 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
     <div className="glass rounded-2xl p-6 border border-white/10 shadow-2xl h-full relative overflow-hidden group transition-all duration-500 hover:bg-slate-900/40">
       <div className="flex flex-wrap justify-between items-end mb-8 gap-6 relative z-10">
         <div className="flex flex-col">
-          <span className="text-[11px] text-slate-400 uppercase tracking-[0.4em] font-black">MISSION_TRAJECTORY_STATUS</span>
+          <span className="text-[11px] text-slate-400 uppercase tracking-[0.4em] font-black">Mission Trajectory Status</span>
           <div className="flex items-baseline space-x-3 mt-2">
             <span className="text-4xl font-black mono text-white tracking-tighter">
               {progress.toFixed(3)}<span className="text-lg text-blue-400 ml-1.5">%</span>
             </span>
-            <span className="text-xs mono text-slate-500 uppercase font-bold tracking-widest">Global_Index</span>
+            <span className="text-xs text-slate-500 uppercase font-bold tracking-widest">Global Index</span>
           </div>
         </div>
 
@@ -61,20 +61,18 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
           <div className="flex flex-col items-end bg-blue-500/10 border border-blue-400/30 rounded-xl px-5 py-3 shadow-lg">
             <span className="text-[10px] text-blue-300 uppercase tracking-[0.2em] font-black mb-1.5 flex items-center">
               <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse mr-2.5"></span>
-              TARGET_ACQUISITION: {nextMilestone.label}
+              Target Acquisition: {nextMilestone.label}
             </span>
             <div className="text-lg font-black mono text-white tabular-nums tracking-tight">
-              T-MINUS {formatCountdown(nextMilestone.offset - elapsedSeconds)}
+              T-Minus {formatCountdown(nextMilestone.offset - elapsedSeconds)}
             </div>
           </div>
         )}
       </div>
       
       <div className="relative h-16 flex items-center z-10">
-        {/* Progress Track */}
         <div className="absolute left-0 right-0 h-2.5 bg-slate-950 rounded-full border border-white/10 shadow-inner"></div>
         
-        {/* Active Progress */}
         <div 
           className="absolute left-0 h-2.5 bg-gradient-to-r from-blue-700 via-blue-500 to-blue-400 rounded-full transition-all duration-1000 ease-out z-10"
           style={{ width: `${progress}%`, boxShadow: '0 0 25px rgba(59, 130, 246, 0.6)' }}
@@ -82,7 +80,6 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
           <div className="absolute top-0 left-0 w-full h-full bg-white/20 animate-pulse rounded-full"></div>
         </div>
 
-        {/* Milestone Tick Markers */}
         {MAJOR_MILESTONES.map((m, i) => {
           const mPos = ((m.offset - minOffset) / totalDuration) * 100;
           const isReached = elapsedSeconds >= m.offset;
@@ -106,7 +103,7 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
                 <div className={`absolute top-6 left-1/2 -translate-x-1/2 flex flex-col items-center transition-all duration-500 ${
                   isReached ? 'opacity-100 translate-y-0' : 'opacity-40 translate-y-2'
                 }`}>
-                  <span className={`text-[10px] font-black mono whitespace-nowrap px-2 py-0.5 rounded-md ${
+                  <span className={`text-[10px] font-black whitespace-nowrap px-2 py-0.5 rounded-md ${
                     isReached ? 'text-white bg-blue-600/20' : 'text-slate-500'
                   }`}>
                     {m.label}
@@ -120,36 +117,34 @@ const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {
           );
         })}
         
-        {/* Orion Current Position Pointer */}
         <div 
           className="absolute z-30 transition-all duration-1000 ease-out"
           style={{ left: `${progress}%`, transform: 'translateX(-50%)' }}
         >
           <div className="flex flex-col items-center -mt-10">
-            <div className="px-2 py-1 bg-white text-slate-950 text-[9px] font-black mono rounded shadow-[0_4px_15px_rgba(255,255,255,0.4)] uppercase">
-               ORION_V4
+            <div className="px-2 py-1 bg-white text-slate-950 text-[9px] font-black rounded shadow-[0_4px_15px_rgba(255,255,255,0.4)] uppercase">
+               Orion V4
             </div>
             <div className="w-0.5 h-8 bg-gradient-to-t from-white to-transparent"></div>
           </div>
         </div>
       </div>
 
-      {/* Dynamic Data Grid */}
       <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 border-t border-white/10 pt-6 relative z-10">
         <div className="flex flex-col space-y-1">
-          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">VECTOR_STATUS</span>
-          <span className="text-sm mono text-emerald-400 font-black tracking-tight">NOMINAL_PATH_LOCKED</span>
+          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Vector Status</span>
+          <span className="text-sm text-emerald-400 font-black tracking-tight">Nominal Path Locked</span>
         </div>
         <div className="flex flex-col space-y-1">
-          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">GUIDANCE_MODE</span>
-          <span className="text-sm mono text-blue-400 font-black tracking-tight">STELLAR_INERTIAL</span>
+          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Guidance Mode</span>
+          <span className="text-sm text-blue-400 font-black tracking-tight">Stellar Inertial</span>
         </div>
         <div className="flex flex-col space-y-1">
-          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">S-BAND_LINK</span>
-          <span className="text-sm mono text-slate-300 font-black tracking-tight">UPLINK_ENCRYPTED</span>
+          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">S-Band Link</span>
+          <span className="text-sm text-slate-300 font-black tracking-tight">Uplink Encrypted</span>
         </div>
         <div className="flex flex-col items-end space-y-1">
-          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">SYSTEM_CLOCK_UTC</span>
+          <span className="text-[10px] text-slate-500 font-black uppercase tracking-widest">System Clock (UTC)</span>
           <span className="text-sm mono text-white font-black tabular-nums tracking-tighter">
             {new Date().toISOString().split('T')[1].split('.')[0]}
           </span>

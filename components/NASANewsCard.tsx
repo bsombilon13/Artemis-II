@@ -41,7 +41,7 @@ const NASANewsCard: React.FC = () => {
             <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${loading ? 'bg-blue-400' : 'bg-emerald-400'}`}></span>
             <span className={`relative inline-flex rounded-full h-2 w-2 ${loading ? 'bg-blue-500' : 'bg-emerald-500'}`}></span>
           </div>
-          <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400 mono">NASA_INTEL_FEED</h3>
+          <h3 className="text-[10px] uppercase tracking-[0.2em] font-bold text-slate-400">NASA Intel Feed</h3>
         </div>
         {loading && (
           <span className="text-[8px] mono text-blue-400 font-bold uppercase tracking-widest animate-pulse">Uplink</span>
@@ -53,7 +53,7 @@ const NASANewsCard: React.FC = () => {
         <div className="flex flex-col min-h-full">
           {updates.length === 0 && !loading && (
             <div className="p-6 text-center">
-              <p className="text-[10px] mono text-slate-600 italic">Listening for encrypted mission bulletins...</p>
+              <p className="text-[10px] text-slate-600 italic">Listening for encrypted mission bulletins...</p>
             </div>
           )}
           
@@ -64,12 +64,12 @@ const NASANewsCard: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center space-x-2">
-                  <span className="text-[7px] mono text-blue-500 font-bold">MSG_{idx.toString().padStart(2, '0')}</span>
+                  <span className="text-[7px] mono text-blue-500 font-bold">MSG {idx.toString().padStart(2, '0')}</span>
                   <div className="h-px w-4 bg-slate-800 group-hover:bg-blue-500/30 transition-colors"></div>
                 </div>
                 <span className="text-[7px] mono text-slate-500 tabular-nums uppercase">{update.timestamp}</span>
               </div>
-              <p className="text-[10px] mono text-slate-300 leading-relaxed tracking-tight">
+              <p className="text-[10px] text-slate-300 leading-relaxed tracking-tight font-medium">
                 {update.content}
               </p>
             </div>
@@ -97,7 +97,7 @@ const NASANewsCard: React.FC = () => {
           disabled={loading}
           title="Refresh Feed"
         >
-          <span className="text-[7px] text-blue-500 group-hover:text-blue-400 mono font-bold uppercase tracking-widest transition-colors">Manual_Ref</span>
+          <span className="text-[7px] text-blue-500 group-hover:text-blue-400 mono font-bold uppercase tracking-widest transition-colors">Manual Refresh</span>
           <svg className={`w-2 h-2 text-blue-500 group-hover:text-blue-400 transition-transform ${loading ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>

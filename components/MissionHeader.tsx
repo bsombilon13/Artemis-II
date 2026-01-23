@@ -11,13 +11,13 @@ interface Props {
 const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSettings }) => {
   const getPhaseName = () => {
     switch (phase) {
-      case MissionPhase.PRE_LAUNCH: return 'PRE-LAUNCH SEQUENCE';
-      case MissionPhase.ASCENT: return 'ASCENT & INJECTION';
-      case MissionPhase.ORBIT: return 'TRANS-LUNAR TRANSIT';
-      case MissionPhase.LUNAR_FLYBY: return 'LUNAR SPHERE OF INFLUENCE';
-      case MissionPhase.RETURN: return 'EARTH RE-ENTRY';
-      case MissionPhase.SPLASHDOWN: return 'RECOVERY OPERATIONS';
-      default: return 'ARTEMIS II MISSION';
+      case MissionPhase.PRE_LAUNCH: return 'Pre-Launch Sequence';
+      case MissionPhase.ASCENT: return 'Ascent & Injection';
+      case MissionPhase.ORBIT: return 'Trans-Lunar Transit';
+      case MissionPhase.LUNAR_FLYBY: return 'Lunar Sphere of Influence';
+      case MissionPhase.RETURN: return 'Earth Re-Entry';
+      case MissionPhase.SPLASHDOWN: return 'Recovery Operations';
+      default: return 'Artemis II Mission';
     }
   };
 
@@ -52,8 +52,8 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
           </div>
           <div className="h-10 w-px bg-white/10"></div>
           <div>
-            <h1 className="text-2xl font-black tracking-tight mono leading-none text-white">ARTEMIS II</h1>
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mt-1.5">FLIGHT_OPERATIONS_CENTER</p>
+            <h1 className="text-2xl font-black tracking-tight leading-none text-white">Artemis II</h1>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.25em] mt-1.5">Flight Operations Center</p>
           </div>
         </div>
 
@@ -61,7 +61,7 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
         <div className="flex flex-col items-center">
           <div className="flex items-center space-x-4 mb-2">
             <p className="text-[10px] text-slate-400 uppercase tracking-[0.3em] font-black">
-              {isTMinus ? 'MISSION COUNTDOWN (L-MINUS)' : 'MISSION ELAPSED TIME (T-PLUS)'}
+              {isTMinus ? 'Mission Countdown (L-Minus)' : 'Mission Elapsed Time (T-Plus)'}
             </p>
             {isTMinus && (
               <span className="text-[9px] bg-blue-600/30 text-blue-300 px-2 py-0.5 rounded-full mono border border-blue-500/40 font-bold uppercase">
@@ -71,14 +71,14 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
           </div>
           
           <div className={`flex items-baseline font-black mono tracking-tighter tabular-nums ${isTMinus && countdownMs < 60000 ? 'text-red-500' : 'text-white'}`}>
-            <span className="text-5xl opacity-80">{isTMinus ? 'L-' : 'T+'}</span>
-            <span className="text-5xl">{timeParts.d}</span>
+            <span className="text-5xl opacity-80 font-bold">{isTMinus ? 'L-' : 'T+'}</span>
+            <span className="text-5xl font-bold">{timeParts.d}</span>
             <span className="text-2xl mx-1 text-slate-600">:</span>
-            <span className="text-5xl">{timeParts.h}</span>
+            <span className="text-5xl font-bold">{timeParts.h}</span>
             <span className="text-2xl mx-1 text-slate-600">:</span>
-            <span className="text-5xl">{timeParts.m}</span>
+            <span className="text-5xl font-bold">{timeParts.m}</span>
             <span className="text-2xl mx-1 text-slate-600">:</span>
-            <span className="text-5xl">{timeParts.s}</span>
+            <span className="text-5xl font-bold">{timeParts.s}</span>
             <span className="text-2xl mx-1 text-slate-600">:</span>
             <span className="text-4xl text-blue-400 font-bold">{timeParts.ms}</span>
           </div>
@@ -87,10 +87,10 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
         {/* Status Quick-Look */}
         <div className="flex space-x-8 items-center">
           <div className="text-right">
-            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">SYSTEM_STATUS</p>
+            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">System Status</p>
             <div className="flex items-center justify-end space-x-2">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
-              <p className="text-sm font-black text-blue-300 mono uppercase tracking-tight">{getPhaseName()}</p>
+              <p className="text-sm font-black text-blue-300 uppercase tracking-tight">{getPhaseName()}</p>
             </div>
           </div>
           <div className="h-10 w-px bg-white/10"></div>
@@ -98,8 +98,8 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
             onClick={onOpenSettings}
             className="group flex flex-col items-end px-4 py-2 hover:bg-white/5 rounded-lg transition-all"
           >
-            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest group-hover:text-blue-400">CONFIG</p>
-            <p className="text-xs font-black mono text-white group-hover:text-blue-200 uppercase">Mission_Control</p>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest group-hover:text-blue-400">Settings</p>
+            <p className="text-xs font-black text-white group-hover:text-blue-200 uppercase">Mission Control</p>
           </button>
         </div>
       </div>

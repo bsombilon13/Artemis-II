@@ -118,12 +118,12 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
     <div className={`glass rounded-xl h-full border border-white/10 flex flex-col overflow-hidden shadow-2xl ${isCompressed ? 'bg-slate-900/80' : 'bg-slate-900/60'}`}>
       <div className={`bg-slate-800/80 px-4 py-3 border-b border-white/10 flex items-center justify-between`}>
         <div className="flex flex-col">
-          <h3 className="text-[10px] uppercase tracking-[0.25em] font-black text-slate-300">SEQUENCE_MONITOR</h3>
-          {!isCompressed && <span className="text-[9px] text-blue-400 mono font-bold italic mt-0.5 tracking-tighter">FLIGHT_DAY_CHRONOLOGY</span>}
+          <h3 className="text-[10px] uppercase tracking-[0.25em] font-black text-slate-300">Sequence Monitor</h3>
+          {!isCompressed && <span className="text-[9px] text-blue-400 font-bold italic mt-0.5 tracking-tighter uppercase">Flight Day Chronology</span>}
         </div>
         <div className="flex items-center space-x-2">
            <div className={`px-2 py-0.5 bg-emerald-500/10 rounded border border-emerald-500/30`}>
-              <span className="text-[8px] mono text-emerald-400 font-black animate-pulse uppercase tracking-wider">SYNC</span>
+              <span className="text-[8px] mono text-emerald-400 font-black animate-pulse uppercase tracking-wider">Sync Active</span>
            </div>
         </div>
       </div>
@@ -166,7 +166,7 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
                   <div className={`${isCompressed ? 'ml-3' : 'ml-6'} flex-1 overflow-hidden`}>
                     <div className="flex flex-col">
                       <div className="flex items-center justify-between gap-4">
-                        <span className={`font-bold mono transition-colors truncate ${
+                        <span className={`font-bold transition-colors truncate ${
                           isCompressed ? 'text-[10px]' : 'text-[12px]'
                         } ${
                           isActive ? 'text-white' : isPast ? 'text-slate-300' : 'text-slate-500'
@@ -196,9 +196,9 @@ const MissionTimeline: React.FC<Props> = ({ elapsedSeconds, isCompressed }) => {
         </div>
       </div>
       
-      <div className={`bg-slate-900 border-t border-white/10 px-4 py-2 flex justify-between items-center text-[9px] mono text-slate-500 font-bold uppercase tracking-[0.2em]`}>
-        <span>STATION: FLIGHT_DIR</span>
-        <span>UPTIME_CHRONO: {Math.floor(elapsedSeconds / 3600).toString().padStart(3, '0')}H</span>
+      <div className={`bg-slate-900 border-t border-white/10 px-4 py-2 flex justify-between items-center text-[9px] font-bold uppercase tracking-[0.2em] text-slate-500`}>
+        <span>Station: Flight Director</span>
+        <span className="mono">Uptime Chrono: {Math.floor(elapsedSeconds / 3600).toString().padStart(3, '0')}H</span>
       </div>
 
       <style>{`

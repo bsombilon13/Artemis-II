@@ -1,14 +1,8 @@
 import React, { useMemo, useRef, useEffect, useState } from 'react';
-import { getLatestNASANews } from '../services/geminiService';
 
 interface Props {
   elapsedSeconds: number;
   hideContainer?: boolean;
-}
-
-interface NASAUpdate {
-  timestamp: string;
-  content: string;
 }
 
 interface Milestone {
@@ -92,9 +86,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [isSynced, setIsSynced] = useState(true);
-  const [nasaUpdates, setNasaUpdates] = useState<NASAUpdate[]>([]);
-  const [newsLoading, setNewsLoading] = useState(false);
-  const [lastSync, setLastSync] = useState("");
   
   const outboundPath = "M 21,34 C 23,28 35,20 50,22 C 65,25 78,45 82,58 C 84,65 78,68 75,60";
   const returnPath = "M 75,60 C 72,52 65,75 45,70 C 30,65 22,45 18,38";
@@ -115,28 +106,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
       setIndicatorPos({ x: point.x, y: point.y, angle });
     }
   }, [progress]);
-
-  const fetchNews = async () => {
-    if (newsLoading) return;
-    setNewsLoading(true);
-    try {
-      const updates = await getLatestNASANews();
-      if (Array.isArray(updates)) {
-        setNasaUpdates(updates);
-      }
-    } catch (error) {
-      console.warn("Trajectory Map: News acquisition deferred.");
-    } finally {
-      setLastSync(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-      setNewsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchNews();
-    const newsInterval = setInterval(fetchNews, 1800000); 
-    return () => clearInterval(newsInterval);
-  }, []);
 
   const currentActiveMilestone = useMemo(() => {
     return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
@@ -323,44 +292,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               </div>
             </div>
           )}
-        </div>
-
-        <div className="w-48 xl:w-56 shrink-0 flex flex-col glass bg-slate-900/40 rounded-xl border border-slate-800/60 overflow-hidden min-h-0">
-          <div className="h-9 px-3 bg-slate-900 border-b border-slate-800 flex items-center justify-between shrink-0">
-            <span className="text-[8px] font-bold text-blue-400 tracking-tighter uppercase">NASA Intel Uplink</span>
-            <div className={`w-1.5 h-1.5 rounded-full ${newsLoading ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}`}></div>
-          </div>
-          <div className="flex-1 overflow-y-auto custom-scrollbar bg-slate-950/20 min-h-0">
-             <div className="flex flex-col min-h-full">
-               {nasaUpdates.length === 0 && !newsLoading && (
-                 <div className="p-3 text-[9px] text-slate-600 italic">Acquiring mission data...</div>
-               )}
-               {nasaUpdates.map((update, idx) => (
-                 <div 
-                   key={idx} 
-                   className="p-3 border-b border-slate-800/40 hover:bg-white/[0.01] transition-colors last:border-0"
-                 >
-                   <div className="flex items-center justify-between mb-1">
-                     <span className="text-[7px] mono text-blue-500 font-bold uppercase tracking-tighter">Data {idx.toString().padStart(2, '0')}</span>
-                     <span className="text-[7px] mono text-slate-600 uppercase tabular-nums">{update.timestamp}</span>
-                   </div>
-                   <p className="text-[9px] text-slate-400 leading-relaxed font-medium">
-                     {update.content}
-                   </p>
-                 </div>
-               ))}
-               {newsLoading && (
-                 <div className="p-3 flex flex-col items-center justify-center space-y-2 py-6">
-                   <div className="w-3 h-3 border border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
-                   <span className="text-[7px] mono text-slate-600 uppercase tracking-widest">Polling</span>
-                 </div>
-               )}
-             </div>
-          </div>
-          <div className="h-7 px-3 bg-slate-950/60 border-t border-slate-800 flex justify-between items-center shrink-0">
-             <span className="text-[7px] text-slate-600 uppercase font-bold tracking-widest">Status Live</span>
-             <span className="text-[7px] mono text-slate-500 uppercase tabular-nums">{lastSync}</span>
-          </div>
         </div>
       </div>
 

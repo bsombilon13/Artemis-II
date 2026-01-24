@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 interface Props {
@@ -256,7 +257,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           </svg>
 
           {selectedMilestone && (
-            <div className="absolute top-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-top-2 duration-300 z-50 overflow-y-auto max-h-[80%] custom-scrollbar">
+            <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 z-50 overflow-y-auto max-h-[80%] custom-scrollbar">
               <div className="flex justify-between items-start">
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-2">

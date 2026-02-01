@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 interface Props {
@@ -39,7 +38,7 @@ const MILESTONES: Milestone[] = [
     objective: "Verify life support systems, comms, and proximity operations in high Earth orbit environment before TLI.",
     historicalFact: "HEO testing ensures life support systems are fully operational before TLI.",
     missionFact: "Orion's first burn in space to raise perigee from Earth's atmosphere.",
-    x: 32, y: 23, t: 2940, color: "#60a5fa" 
+    x: 42, y: 14, t: 2940, color: "#60a5fa" 
   },
   { 
     id: 2, 
@@ -49,7 +48,7 @@ const MILESTONES: Milestone[] = [
     objective: "Perform high-delta-V burn to depart Earth SOI and achieve a precision lunar intercept trajectory.",
     historicalFact: "TLI marks the departure from Earth's immediate influence.",
     missionFact: "The ICPS provides the massive impulse needed to reach lunar distances.",
-    x: 48, y: 22, t: 92220, color: "#10b981" 
+    x: 68, y: 22, t: 92220, color: "#10b981" 
   },
   { 
     id: 3, 
@@ -59,7 +58,7 @@ const MILESTONES: Milestone[] = [
     objective: "Utilize lunar gravity for free-return trajectory and conduct critical deep space optical navigation and farside observations.",
     historicalFact: "The flyby provides a spectacular view of the Lunar Farside.",
     missionFact: "Altitude drops to approx 10,000km above the lunar surface.",
-    x: 82, y: 58, t: 436980, color: "#f1f5f9" 
+    x: 84, y: 60, t: 436980, color: "#f1f5f9" 
   },
   { 
     id: 4, 
@@ -69,7 +68,7 @@ const MILESTONES: Milestone[] = [
     objective: "Validate long-duration thermal management and crew health metrics during high-velocity return transit.",
     historicalFact: "The free-return trajectory is a safety-first flight design.",
     missionFact: "Velocity gradually increases as Orion is pulled back by Earth's gravity.",
-    x: 45, y: 70, t: 550000, color: "#3b82f6" 
+    x: 48, y: 76, t: 550000, color: "#3b82f6" 
   },
   { 
     id: 5, 
@@ -79,7 +78,7 @@ const MILESTONES: Milestone[] = [
     objective: "Demonstrate thermal protection system performance at lunar return speeds and execute precise crew module recovery sequence.",
     historicalFact: "Artemis II splashdown targets the coast of San Diego.",
     missionFact: "The skip-entry maneuver bleeds off 25,000 mph of velocity.",
-    x: 18, y: 38, t: 787560, color: "#ef4444" 
+    x: 19, y: 38, t: 787560, color: "#ef4444" 
   }
 ];
 
@@ -87,22 +86,21 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null);
   const [hoveredId, setHoveredId] = useState<number | null>(null);
   const [isSynced, setIsSynced] = useState(true);
+  const [pathLength, setPathLength] = useState(0);
   
-  const outboundPath = "M 21,34 C 23,28 35,20 50,22 C 65,25 78,45 82,58 C 84,65 78,68 75,60";
-  const returnPath = "M 75,60 C 72,52 65,75 45,70 C 30,65 22,45 18,38";
-  
-  const fullPathD = `${outboundPath} ${returnPath.replace('M', 'L')}`;
-  const totalMissionSeconds = 787560;
-  const progress = Math.max(0, Math.min(1, elapsedSeconds / totalMissionSeconds));
+  // High-fidelity Figure-8 Free Return Trajectory Path for Artemis II
+  const fullPathD = "M 21,34 C 28,10 55,5 68,22 C 85,38 95,50 84,60 C 75,70 65,85 45,75 C 28,65 22,45 19,38";
 
   const pathRef = useRef<SVGPathElement>(null);
   const [indicatorPos, setIndicatorPos] = useState({ x: 0, y: 0, angle: 0 });
 
-  // Watch for timeline resets/jumps and force re-sync
+  const totalMissionSeconds = 787560;
+  const progress = Math.max(0, Math.min(1, elapsedSeconds / totalMissionSeconds));
+
   const lastElapsed = useRef(elapsedSeconds);
   useEffect(() => {
     const delta = Math.abs(elapsedSeconds - lastElapsed.current);
-    if (delta > 60) { // If jump is more than 1 minute, assume manual update/reset
+    if (delta > 60) {
       setIsSynced(true);
     }
     lastElapsed.current = elapsedSeconds;
@@ -111,6 +109,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   useEffect(() => {
     if (pathRef.current) {
       const length = pathRef.current.getTotalLength();
+      setPathLength(length);
       const point = pathRef.current.getPointAtLength(length * progress);
       const nextPoint = pathRef.current.getPointAtLength(Math.min(length, length * progress + 0.1));
       const angle = Math.atan2(nextPoint.y - point.y, nextPoint.x - point.x) * (180 / Math.PI);
@@ -119,7 +118,8 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
   }, [progress]);
 
   const currentActiveMilestone = useMemo(() => {
-    return [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t) || MILESTONES[0];
+    const reached = [...MILESTONES].reverse().find(m => elapsedSeconds >= m.t);
+    return reached || null;
   }, [elapsedSeconds]);
 
   useEffect(() => {
@@ -196,14 +196,32 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                 <stop offset="60%" stopColor="rgba(0,0,0,0)" />
                 <stop offset="100%" stopColor="rgba(0,0,0,0.65)" />
               </linearGradient>
+              <filter id="trajectoryGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="0.4" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
             </defs>
 
-            <path d={outboundPath} fill="none" stroke="#10b981" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
-            <path d={returnPath} fill="none" stroke="#3b82f6" strokeWidth="0.4" strokeDasharray="1,2" className="opacity-20" />
+            {/* Faint reference path */}
+            <path d={fullPathD} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" strokeDasharray="1,2" />
             
-            <path ref={pathRef} d={fullPathD} fill="none" stroke="rgba(59, 130, 246, 0.1)" strokeWidth="0.8" />
+            {/* Length calculation path */}
+            <path ref={pathRef} d={fullPathD} fill="none" stroke="transparent" strokeWidth="0" />
 
-            {/* Earth with Enhanced Diurnal Rotation Effect */}
+            {/* Active Drawing Trajectory */}
+            <path 
+              d={fullPathD} 
+              fill="none" 
+              stroke="#3b82f6" 
+              strokeWidth="0.8" 
+              strokeDasharray={pathLength} 
+              strokeDashoffset={pathLength * (1 - progress)}
+              strokeLinecap="round"
+              filter="url(#trajectoryGlow)"
+              className="transition-all duration-300 ease-linear opacity-80"
+            />
+
+            {/* Earth Rendering */}
             <g transform="translate(20, 35)">
                <circle r="7.8" fill="none" stroke="#3b82f6" strokeWidth="0.4" className="opacity-10" />
                <circle r="7" fill="#0f172a" stroke="#3b82f6" strokeWidth="0.2" className="opacity-90" />
@@ -229,14 +247,35 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                <text y="12" textAnchor="middle" className="text-[3px] mono fill-blue-400/60 font-bold uppercase tracking-widest">Earth</text>
             </g>
 
+            {/* Launchpad: Kennedy Space Center LC-39B Visual Representation */}
+            <g transform="translate(21, 34)" className="opacity-70 group/launchpad">
+               <title>Kennedy Space Center LC-39B</title>
+               {/* Pad Foundation */}
+               <rect x="-1.8" y="-0.4" width="3.6" height="0.8" fill="#1e293b" rx="0.1" />
+               <rect x="-1.5" y="-0.2" width="3" height="0.4" fill="#334155" rx="0.05" />
+               {/* Mobile Launcher Gantry Structure */}
+               <rect x="-0.8" y="-5" width="0.7" height="5" fill="#334155" />
+               <rect x="-0.7" y="-5" width="0.5" height="5" fill="#475569" />
+               {/* Internal structural cross braces */}
+               <path d="M -0.8,-4.5 L -0.1,-4 M -0.8,-3.5 L -0.1,-3 M -0.8,-2.5 L -0.1,-2 M -0.8,-1.5 L -0.1,-1" stroke="#1e293b" strokeWidth="0.1" />
+               {/* Umbilical Service Arms */}
+               <line x1="-0.1" y1="-4.2" x2="1.4" y2="-4.2" stroke="#64748b" strokeWidth="0.25" />
+               <line x1="-0.1" y1="-2.8" x2="1.2" y2="-2.8" stroke="#64748b" strokeWidth="0.25" />
+               <line x1="-0.1" y1="-1.5" x2="1.0" y2="-1.5" stroke="#64748b" strokeWidth="0.25" />
+               {/* Designation Label */}
+               <text x="2.5" y="-0.5" className="text-[1.8px] mono fill-slate-500 font-black uppercase tracking-tighter select-none">LC-39B</text>
+            </g>
+
+            {/* Moon Rendering */}
             <g transform="translate(75, 60)">
                <circle r="5" fill="url(#moonGrad)" stroke="#94a3b8" strokeWidth="0.2" className="opacity-80" />
                <text y="10" textAnchor="middle" className="text-[3px] mono fill-slate-400 font-bold uppercase tracking-widest">The Moon</text>
             </g>
 
+            {/* Milestones on path */}
             {MILESTONES.map((m) => {
               const isPassed = elapsedSeconds >= m.t;
-              const isCurrent = currentActiveMilestone.id === m.id;
+              const isCurrent = currentActiveMilestone?.id === m.id;
               const isActive = (selectedMilestone?.id === m.id) || (hoveredId === m.id) || (isSynced && isCurrent);
               return (
                 <g key={m.id} className="cursor-pointer" onMouseEnter={() => setHoveredId(m.id)} onMouseLeave={() => setHoveredId(null)} onClick={() => { setSelectedMilestone(m); setIsSynced(false); }}>
@@ -247,6 +286,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
               );
             })}
 
+            {/* Position Indicator */}
             {progress > 0 && progress < 1 && (
               <g transform={`translate(${indicatorPos.x}, ${indicatorPos.y}) rotate(${indicatorPos.angle})`}>
                 <path d="M -1.5,-1 L 2,0 L -1.5,1 Z" fill="#fff" stroke="#3b82f6" strokeWidth="0.3" />
@@ -255,6 +295,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
             )}
           </svg>
 
+          {/* Detailed Milestone Information Pop-up */}
           {selectedMilestone && (
             <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-blue-500/40 rounded-xl p-4 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] animate-in fade-in slide-in-from-bottom-4 duration-500 z-50 overflow-y-auto max-h-[85%] custom-scrollbar">
               <div className="flex justify-between items-start mb-3">
@@ -263,7 +304,7 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                     <div className="w-2.5 h-2.5 rounded-sm rotate-45" style={{ backgroundColor: selectedMilestone.color }}></div>
                     <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{selectedMilestone.label}</h4>
                   </div>
-                  {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
+                  {isSynced && selectedMilestone.id === currentActiveMilestone?.id && (
                     <div className="flex items-center space-x-1.5 mt-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                       <span className="text-[7px] mono text-emerald-400 font-bold uppercase tracking-tighter">Live Orbital Tracking</span>
@@ -275,7 +316,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                 </button>
               </div>
 
-              {/* MISSION OBJECTIVE HIGHLIGHT */}
               <div className="mb-4 bg-blue-600/10 border border-blue-500/30 rounded-lg p-3 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
                    <svg className="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 24 24">

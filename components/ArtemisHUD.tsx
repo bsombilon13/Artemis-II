@@ -17,7 +17,7 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
   const isBoosterSepFlash = elapsedSeconds >= 128 && elapsedSeconds < 131;
   
   const isLASJettisoned = elapsedSeconds >= 198;
-  const isLASSepFlash = elapsedSeconds >= 198 && elapsedSeconds < 200.5;
+  const isLASSepFlash = elapsedSeconds >= 198 && elapsedSeconds < 201;
 
   const isCoreSeparated = elapsedSeconds >= 498;
   const isCoreSepFlash = elapsedSeconds >= 498 && elapsedSeconds < 501.5;
@@ -57,13 +57,13 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
 
   // Debris particles for separation
   const debris = useMemo(() => {
-    return Array.from({ length: 12 }).map((_, i) => ({
+    return Array.from({ length: 15 }).map((_, i) => ({
       id: i,
       x: (Math.random() - 0.5) * 40,
       y: (Math.random() - 0.5) * 40,
-      vx: (Math.random() - 0.5) * 200,
-      vy: (Math.random() - 0.5) * 200,
-      size: 1 + Math.random() * 2,
+      vx: (Math.random() - 0.5) * 300,
+      vy: (Math.random() - 0.5) * 300,
+      size: 1 + Math.random() * 3,
     }));
   }, []);
 
@@ -125,6 +125,17 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
         ))}
       </div>
 
+      {/* Event Indicator */}
+      {(isBoosterSepFlash || isLASSepFlash) && (
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-50 animate-in zoom-in fade-in duration-300">
+           <div className={`px-4 py-1.5 border rounded-full shadow-lg ${isBoosterSepFlash ? 'bg-blue-600/90 border-blue-400' : 'bg-orange-600/90 border-orange-400'}`}>
+              <span className="text-[10px] font-black text-white uppercase tracking-[0.3em] italic">
+                {isBoosterSepFlash ? 'SRB Separation' : 'LAS Jettison Detected'}
+              </span>
+           </div>
+        </div>
+      )}
+
       {/* Separation Event Flashes */}
       <div className="absolute inset-0 pointer-events-none z-50">
         {(isBoosterSepFlash || isLASSepFlash || isCoreSepFlash || isOrionSepFlash) && (
@@ -159,8 +170,8 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               } ${isOrionSeparated ? 'ease-out-back' : 'cubic-bezier(0.16, 1, 0.3, 1)'}`}
             >
               {/* Separation Debris Cloud */}
-              {isOrionSepFlash && (
-                <div className="absolute top-20 left-1/2 -translate-x-1/2 w-0 h-0 z-50">
+              {(isOrionSepFlash || isLASSepFlash || isBoosterSepFlash) && (
+                <div className="absolute top-10 left-1/2 -translate-x-1/2 w-0 h-0 z-50">
                   {debris.map(d => (
                     <div 
                       key={d.id}
@@ -177,22 +188,33 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                 </div>
               )}
 
-              {/* LAS TOWER: Jettisons upward */}
-              <div className={`absolute bottom-full left-1/2 -translate-x-1/2 preserve-3d transition-all duration-[2500ms] ${isLASJettisoned ? 'translate-y-[-400px] opacity-0 rotate-x-[45deg]' : ''}`}>
-                <div className="w-1.5 h-16 bg-slate-400/50 border-x border-slate-500/40 mx-auto">
-                   <div className="w-full h-4 bg-slate-200/60" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+              {/* LAS ASSEMBLY */}
+              <div 
+                className={`absolute bottom-[95%] left-1/2 -translate-x-1/2 preserve-3d transition-all duration-[2500ms] ${
+                  isLASJettisoned 
+                  ? 'translate-y-[-1200px] opacity-0 rotate-x-[120deg] scale-125' 
+                  : ''
+                }`}
+              >
+                {isLASSepFlash && (
+                  <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-4 h-24 bg-gradient-to-t from-blue-400 via-blue-600/30 to-transparent blur-lg animate-pulse"></div>
+                )}
+                <div className="w-1.5 h-16 bg-slate-400/80 border-x border-slate-500/40 mx-auto relative">
+                   <div className="w-full h-4 bg-slate-200/90" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+                   <div className="absolute top-2 -left-1 w-1 h-1 bg-blue-400/80 rounded-full animate-pulse"></div>
+                   <div className="absolute top-2 -right-1 w-1 h-1 bg-blue-400/80 rounded-full animate-pulse"></div>
                 </div>
-                {isLASSepFlash && <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-blue-400 rounded-full animate-ping blur-xl"></div>}
+                <div className="relative w-12 h-6 preserve-3d">
+                  <div className={`absolute inset-0 bg-slate-300/40 border border-slate-400/50 transition-all duration-[1500ms] ${isLASJettisoned ? 'translate-x-[-40px] rotate-y-[-90deg]' : ''}`} style={{ clipPath: 'polygon(30% 0%, 50% 0%, 50% 100%, 0% 100%)' }}></div>
+                  <div className={`absolute inset-0 bg-slate-300/40 border border-slate-400/50 transition-all duration-[1500ms] ${isLASJettisoned ? 'translate-x-[40px] rotate-y-[90deg]' : ''}`} style={{ clipPath: 'polygon(50% 0%, 70% 0%, 100% 100%, 50% 100%)' }}></div>
+                </div>
               </div>
 
               {/* ORION CAPSULE */}
               <div className={`w-12 h-10 bg-slate-100/40 border border-slate-300/50 mx-auto relative ${isOrionSepFlash ? 'brightness-200 scale-110 shadow-[0_0_50px_rgba(255,255,255,1)]' : ''}`} style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)' }}>
                  <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent"></div>
-                 
-                 {/* Intense RCS stabilization bursts */}
-                 {isOrionSepFlash && (
+                 {(isOrionSepFlash || isLASSepFlash) && (
                     <div className="absolute inset-0 z-10 pointer-events-none">
-                       {/* Quad-thruster burst */}
                        <div className="absolute -left-6 top-3 w-8 h-1 bg-cyan-300 blur-[3px] animate-pulse"></div>
                        <div className="absolute -right-6 top-3 w-8 h-1 bg-cyan-300 blur-[3px] animate-pulse"></div>
                        <div className="absolute left-1/2 -top-6 -translate-x-1/2 w-1 h-8 bg-cyan-300 blur-[3px] animate-pulse"></div>
@@ -221,21 +243,12 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               )}
             </div>
 
-            {/* 2. ICPS (INTERIM CRYOGENIC PROPULSION STAGE) */}
+            {/* 2. ICPS */}
             <div className={`transition-all duration-[4000ms] cubic-bezier(0.16, 1, 0.3, 1) ${isOrionSeparated ? 'translate-y-[220px] opacity-10 rotate-x-[-25deg] scale-90 blur-[3px]' : isCoreSeparated ? 'translate-y-[-40px]' : ''}`}>
                <div className="w-14 h-20 bg-slate-300/15 border-x border-slate-400/30 mx-auto -mt-px relative">
                   <div className="absolute inset-x-0 bottom-0 h-8 bg-slate-400/25" style={{ clipPath: 'polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%)' }}></div>
-                  
                   {isICPSActive && !isOrionSeparated && (
                      <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-10 h-32 bg-gradient-to-b from-blue-400/70 via-blue-500/20 to-transparent blur-xl animate-pulse"></div>
-                  )}
-                  {isCoreSepFlash && <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-20 h-20 bg-orange-400 rounded-full animate-ping blur-2xl"></div>}
-                  
-                  {/* Mechanical Docking Port Visual (Visible after separation) */}
-                  {isOrionSeparated && (
-                    <div className="absolute top-0 inset-x-0 h-6 bg-slate-800 border-t-2 border-slate-600 flex items-center justify-center">
-                       <div className="w-4 h-4 rounded-full border border-slate-700"></div>
-                    </div>
                   )}
                </div>
             </div>
@@ -245,16 +258,37 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               <div className="relative preserve-3d w-18 h-80 bg-orange-600/25 border-x border-orange-500/40 mx-auto -mt-px">
                 <div className="absolute inset-0 bg-[linear-gradient(transparent_96%,rgba(0,0,0,0.1)_96%)] bg-[size:100%_16px]"></div>
                 
+                {/* SRBs */}
                 <div className="absolute inset-0 preserve-3d">
-                  <div className={`absolute top-24 -left-10 w-9 h-64 bg-slate-100/30 border border-slate-300/40 transition-all duration-[6000ms] ${isBoosterSeparated ? 'translate-x-[-300px] translate-y-[500px] rotate-z-[-60deg] opacity-0' : ''}`}>
+                  {/* Left SRB */}
+                  <div className={`absolute top-24 -left-10 w-9 h-64 bg-slate-100/30 border border-slate-300/40 transition-all duration-[6000ms] ${isBoosterSeparated ? 'translate-x-[-400px] translate-y-[600px] rotate-z-[-90deg] opacity-0' : ''}`}>
                     <div className="absolute top-0 w-full h-8 bg-slate-300/40" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+                    
+                    {/* Booster Separation Motors (BSMs) - Plumes during separation */}
+                    {isBoosterSepFlash && (
+                      <div className="absolute inset-0 z-50 pointer-events-none">
+                        <div className="absolute -top-4 -right-4 w-12 h-4 bg-orange-400/80 blur-md animate-bsm-pulse"></div>
+                        <div className="absolute -bottom-4 -right-4 w-12 h-4 bg-orange-400/80 blur-md animate-bsm-pulse"></div>
+                      </div>
+                    )}
+
                     {!isBoosterSeparated && isAscent && (
                       <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-8 h-32 bg-gradient-to-b from-orange-500/90 to-transparent blur-2xl animate-pulse"></div>
                     )}
                   </div>
 
-                  <div className={`absolute top-24 -right-10 w-9 h-64 bg-slate-100/30 border border-slate-300/40 transition-all duration-[6000ms] ${isBoosterSeparated ? 'translate-x-[300px] translate-y-[500px] rotate-z-[60deg] opacity-0' : ''}`}>
+                  {/* Right SRB */}
+                  <div className={`absolute top-24 -right-10 w-9 h-64 bg-slate-100/30 border border-slate-300/40 transition-all duration-[6000ms] ${isBoosterSeparated ? 'translate-x-[400px] translate-y-[600px] rotate-z-[90deg] opacity-0' : ''}`}>
                     <div className="absolute top-0 w-full h-8 bg-slate-300/40" style={{ clipPath: 'polygon(50% 0%, 100% 100%, 0% 100%)' }}></div>
+                    
+                    {/* Booster Separation Motors (BSMs) */}
+                    {isBoosterSepFlash && (
+                      <div className="absolute inset-0 z-50 pointer-events-none">
+                        <div className="absolute -top-4 -left-4 w-12 h-4 bg-orange-400/80 blur-md animate-bsm-pulse"></div>
+                        <div className="absolute -bottom-4 -left-4 w-12 h-4 bg-orange-400/80 blur-md animate-bsm-pulse"></div>
+                      </div>
+                    )}
+
                     {!isBoosterSeparated && isAscent && (
                       <div className="absolute -bottom-24 left-1/2 -translate-x-1/2 w-8 h-32 bg-gradient-to-b from-orange-500/90 to-transparent blur-2xl animate-pulse"></div>
                     )}
@@ -273,10 +307,8 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
         </div>
       </div>
 
-      {/* Dynamic Telemetry Metric Overlays with Animated Meters */}
+      {/* Telemetry Metric Overlays */}
       <div className="absolute bottom-8 left-10 space-y-5 z-20 pointer-events-none">
-        
-        {/* Metric: Pitch */}
         <div className="flex flex-col group">
           <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Vehicle Pitch</span>
           <div className="flex items-center space-x-3">
@@ -286,7 +318,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               </span>
               <span className="text-[10px] text-slate-600 mono font-black ml-1">DEG</span>
             </div>
-            {/* Meter Bar */}
             <div className="w-24 h-1 bg-slate-800 rounded-full overflow-hidden self-center ml-2 border border-white/5">
               <div 
                 className="h-full bg-slate-400 transition-all duration-700 ease-out shadow-[0_0_8px_rgba(255,255,255,0.3)]"
@@ -296,7 +327,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
           </div>
         </div>
 
-        {/* Metric: Velocity */}
         <div className="flex flex-col group">
           <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Scalar Vel</span>
           <div className="flex items-center space-x-3">
@@ -306,7 +336,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               </span>
               <span className="text-[10px] text-slate-600 mono font-black ml-1">KM/H</span>
             </div>
-            {/* Meter Bar */}
             <div className="w-32 h-1 bg-slate-950 rounded-full overflow-hidden self-center ml-2 border border-blue-500/20 shadow-inner">
               <div 
                 className="h-full bg-blue-500 transition-all duration-300 ease-out shadow-[0_0_12px_rgba(59,130,246,0.6)]"
@@ -316,7 +345,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
           </div>
         </div>
 
-        {/* Metric: Altitude */}
         <div className="flex flex-col group">
           <span className="text-[9px] text-slate-500 uppercase font-black tracking-[0.4em] opacity-80 mb-1">Altitude MSL</span>
           <div className="flex items-center space-x-3">
@@ -326,7 +354,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               </span>
               <span className="text-[10px] text-slate-600 mono font-black ml-1">KM</span>
             </div>
-            {/* Meter Bar */}
             <div className="w-40 h-1 bg-slate-950 rounded-full overflow-hidden self-center ml-2 border border-emerald-500/20 shadow-inner">
               <div 
                 className="h-full bg-emerald-500 transition-all duration-500 ease-out shadow-[0_0_12px_rgba(16,185,129,0.6)]"
@@ -335,7 +362,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             </div>
           </div>
         </div>
-
       </div>
 
       <style>{`
@@ -362,8 +388,15 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
           50% { filter: drop-shadow(0 0 4px currentColor); opacity: 0.95; }
           100% { filter: drop-shadow(0 0 0px currentColor); }
         }
+        @keyframes bsm-pulse {
+          0%, 100% { transform: scale(1); opacity: 0.8; }
+          50% { transform: scale(1.5); opacity: 1; }
+        }
         .animate-telemetry-glow {
           animation: telemetry-glow-pulse 2s ease-in-out infinite;
+        }
+        .animate-bsm-pulse {
+          animation: bsm-pulse 0.1s ease-in-out infinite;
         }
         .preserve-3d { transform-style: preserve-3d; }
         .ease-out-expo { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }

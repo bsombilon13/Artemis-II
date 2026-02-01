@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MissionPhase, TelemetryData } from './types';
 import MissionHeader from './components/MissionHeader';
 import { PrimaryFeed, SecondaryFeeds } from './components/LiveFeeds';
-import MissionTimeline from './components/MissionTimeline';
+import MissionTimeline, { MISSION_EVENTS } from './components/MissionTimeline';
 import MultiViewMonitor from './components/MultiViewMonitor';
 import SettingsPanel from './components/SettingsPanel';
 import HorizontalTimeline from './components/HorizontalTimeline';
@@ -15,9 +15,60 @@ const INITIAL_VIDEO_IDS = ['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4', '21X5lGl
 const HISTORY_LIMIT = 40;
 const STORAGE_KEY = 'artemis_mission_config_v3';
 
+// Tactical Sound Engine
+class MissionAudioEngine {
+  private ctx: AudioContext | null = null;
+  private masterGain: GainNode | null = null;
+
+  init() {
+    if (this.ctx) return;
+    this.ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.connect(this.ctx.destination);
+    this.masterGain.gain.value = 0.25;
+  }
+
+  private playTone(freq: number, type: OscillatorType, duration: number, gainValue: number = 1.0) {
+    if (!this.ctx || !this.masterGain) return;
+    
+    const osc = this.ctx.createOscillator();
+    const g = this.ctx.createGain();
+    
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(freq * 0.5, this.ctx.currentTime + duration);
+    
+    g.gain.setValueAtTime(gainValue, this.ctx.currentTime);
+    g.gain.linearRampToValueAtTime(0, this.ctx.currentTime + duration);
+    
+    osc.connect(g);
+    g.connect(this.masterGain);
+    
+    osc.start();
+    osc.stop(this.ctx.currentTime + duration);
+  }
+
+  playMilestone() {
+    this.playTone(880, 'sine', 0.1, 0.3);
+  }
+
+  playPhase() {
+    this.playTone(220, 'square', 0.6, 0.2);
+    setTimeout(() => this.playTone(440, 'sine', 0.3, 0.2), 50);
+  }
+
+  playCriticalWarning() {
+    this.playTone(660, 'sine', 0.05, 0.1);
+    setTimeout(() => this.playTone(550, 'sine', 0.05, 0.1), 100);
+  }
+}
+
+const audioEngine = new MissionAudioEngine();
+
 const App: React.FC = () => {
   const [phase, setPhase] = useState<MissionPhase>(MissionPhase.PRE_LAUNCH);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   
   const [isPhaseTransitioning, setIsPhaseTransitioning] = useState(false);
   const [displayPhase, setDisplayPhase] = useState<MissionPhase>(MissionPhase.PRE_LAUNCH);
@@ -57,6 +108,47 @@ const App: React.FC = () => {
     return (currentMs - launchDate.getTime()) / 1000;
   }, [currentMs, launchDate]);
 
+  const activeMilestoneIndex = useMemo(() => {
+    let idx = -1;
+    for (let i = 0; i < MISSION_EVENTS.length; i++) {
+      if (elapsedSeconds >= MISSION_EVENTS[i].offsetSeconds) {
+        idx = i;
+      } else {
+        break;
+      }
+    }
+    return idx;
+  }, [elapsedSeconds]);
+
+  // Audio Side Effects
+  const prevActiveIndex = useRef(activeMilestoneIndex);
+  useEffect(() => {
+    if (isAudioEnabled && activeMilestoneIndex > prevActiveIndex.current) {
+      audioEngine.playMilestone();
+    }
+    prevActiveIndex.current = activeMilestoneIndex;
+  }, [activeMilestoneIndex, isAudioEnabled]);
+
+  useEffect(() => {
+    if (isAudioEnabled) {
+      audioEngine.playPhase();
+    }
+  }, [phase, isAudioEnabled]);
+
+  // Critical Warning Heartbeat
+  useEffect(() => {
+    if (!isAudioEnabled || phase !== MissionPhase.PRE_LAUNCH) return;
+    
+    const remaining = launchDate.getTime() - currentMs;
+    if (remaining > 0 && remaining < 60000) {
+      const interval = remaining < 10000 ? 500 : 1000;
+      const timer = setInterval(() => {
+        audioEngine.playCriticalWarning();
+      }, interval);
+      return () => clearInterval(timer);
+    }
+  }, [currentMs, launchDate, phase, isAudioEnabled]);
+
   // Sync config to storage
   useEffect(() => {
     const config = {
@@ -66,12 +158,10 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }, [videoIds, launchDate]);
 
-  // Global Reset: Clear telemetry graphs when flight plan changes
   useEffect(() => {
     setTelemetryHistory([]);
   }, [launchDate]);
 
-  // Phase transition handling logic
   useEffect(() => {
     if (phase !== displayPhase) {
       setIsPhaseTransitioning(true);
@@ -93,7 +183,6 @@ const App: React.FC = () => {
     return { timestamp: Date.now(), altitude: alt, velocity: vel, fuel: Math.max(0, 100 - (t / 100)), heartRate: 70 + Math.random() * 5 };
   }, [elapsedSeconds]);
 
-  // Master Mission Clock & Phase Engine
   useEffect(() => {
     const timer = setInterval(() => {
       const now = Date.now();
@@ -113,7 +202,6 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, [launchDate, phase]);
 
-  // Optimized Telemetry History Recording
   const telemetryRef = useRef(telemetry);
   useEffect(() => {
     telemetryRef.current = telemetry;
@@ -136,6 +224,13 @@ const App: React.FC = () => {
     setVideoIds(newVideoIds);
   };
 
+  const handleToggleAudio = () => {
+    if (!isAudioEnabled) {
+      audioEngine.init();
+    }
+    setIsAudioEnabled(!isAudioEnabled);
+  };
+
   const countdownMs = useMemo(() => launchDate.getTime() - currentMs, [currentMs, launchDate]);
 
   return (
@@ -156,12 +251,14 @@ const App: React.FC = () => {
       )}
 
       <main className="flex-1 flex flex-col overflow-hidden relative">
-        <div 
-          key={`header-transition-${displayPhase}`}
-          className={isPhaseTransitioning ? 'animate-phase-out' : 'animate-phase-in'}
-        >
-          <MissionHeader phase={displayPhase} setPhase={setPhase} countdownMs={countdownMs} onOpenSettings={() => setIsSettingsOpen(true)} />
-        </div>
+        <MissionHeader 
+          phase={phase} 
+          setPhase={setPhase} 
+          countdownMs={countdownMs} 
+          onOpenSettings={() => setIsSettingsOpen(true)} 
+          isAudioEnabled={isAudioEnabled}
+          onToggleAudio={handleToggleAudio}
+        />
         
         <div className="flex-1 p-4 flex flex-col overflow-hidden space-y-4">
           <div className="shrink-0 flex space-x-4">

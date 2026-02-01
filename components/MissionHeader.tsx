@@ -7,6 +7,8 @@ interface Props {
   setPhase: (phase: MissionPhase) => void;
   countdownMs: number;
   onOpenSettings: () => void;
+  isAudioEnabled: boolean;
+  onToggleAudio: () => void;
 }
 
 interface PhaseConfig {
@@ -96,12 +98,20 @@ const PHASE_CONFIG: PhaseConfig[] = [
   }
 ];
 
-const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSettings }) => {
+const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSettings, isAudioEnabled, onToggleAudio }) => {
   const [displayPhase, setDisplayPhase] = useState(phase);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   useEffect(() => {
-    setDisplayPhase(phase);
-  }, [phase]);
+    if (phase !== displayPhase) {
+      setIsTransitioning(true);
+      const timer = setTimeout(() => {
+        setDisplayPhase(phase);
+        setIsTransitioning(false);
+      }, 400); // Wait for fade-out (400ms) before switching data
+      return () => clearTimeout(timer);
+    }
+  }, [phase, displayPhase]);
 
   const activePhaseIdx = PHASE_CONFIG.findIndex(p => p.id === displayPhase);
   const activePhase = PHASE_CONFIG[activePhaseIdx] || PHASE_CONFIG[0];
@@ -133,26 +143,36 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
       
       {/* Dynamic Top Accent Bar */}
       <div 
-        className="absolute top-0 left-0 w-full h-1 transition-all duration-1000" 
-        style={{ backgroundColor: activePhase.color, boxShadow: `0 0 15px ${activePhase.glow}` }}
+        className={`absolute top-0 left-0 w-full h-1 transition-colors duration-1000 ${isTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`} 
+        style={{ 
+          backgroundColor: activePhase.color, 
+          boxShadow: `0 0 15px ${activePhase.glow}` 
+        }}
       ></div>
 
       <div className="relative px-8 py-4 flex items-center justify-between">
         {/* Mission Brand & Dynamic Phase Badge */}
         <div className="flex items-center space-x-10">
           <div className="flex items-center space-x-6">
-            <img 
-              src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" 
-              alt="NASA" 
-              className="w-20 h-auto" 
-            />
+            <div className="flex items-center space-x-5">
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e5/NASA_logo.svg" 
+                alt="NASA" 
+                className="w-16 h-auto" 
+              />
+              <img 
+                src="https://upload.wikimedia.org/wikipedia/commons/e/e2/Artemis_program_%28original_with_wordmark%29.svg" 
+                alt="Artemis Program" 
+                className="w-14 h-auto brightness-0 invert" 
+              />
+            </div>
             <div className="h-8 w-px bg-white/10"></div>
             <div className="flex flex-col">
               <div className="flex items-center space-x-2">
                 <h1 className="text-xl font-black tracking-tight leading-none text-white uppercase drop-shadow-md">Artemis II</h1>
                 {/* TACTICAL PHASE BADGE */}
                 <div 
-                  className="px-3 py-1 rounded-full border flex items-center space-x-2 transition-all duration-700 animate-in fade-in slide-in-from-left-2"
+                  className={`px-3 py-1 rounded-full border flex items-center space-x-2 transition-all duration-700 ${isTransitioning ? 'animate-phase-out' : 'animate-phase-in'}`}
                   style={{ 
                     backgroundColor: `${activePhase.color}25`, 
                     borderColor: `${activePhase.color}80`,
@@ -212,9 +232,9 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
           </div>
         </div>
         
-        {/* Settings & System Status */}
-        <div className="flex items-center space-x-6">
-          <div className="text-right hidden sm:block">
+        {/* Settings, Audio & System Status */}
+        <div className="flex items-center space-x-4">
+          <div className="text-right hidden sm:block mr-2">
             <p className="text-[8px] text-white/40 font-bold uppercase tracking-widest leading-none">System Status</p>
             <div className="flex items-center space-x-2 mt-1 justify-end">
               <p className={`text-[10px] font-black uppercase ${isCritical ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
@@ -223,14 +243,37 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
               <div className={`w-1.5 h-1.5 rounded-full ${isCritical ? 'bg-red-500 animate-ping' : 'bg-emerald-500 animate-pulse'}`}></div>
             </div>
           </div>
-          <button 
-            onClick={onOpenSettings}
-            className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group"
-          >
-            <svg className="w-5 h-5 text-slate-400 group-hover:text-blue-400 group-hover:rotate-45 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-            </svg>
-          </button>
+          
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={onToggleAudio}
+              className={`p-2.5 rounded-xl border transition-all group flex items-center justify-center ${
+                isAudioEnabled 
+                  ? 'bg-blue-600/20 border-blue-500 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.2)]' 
+                  : 'bg-white/5 border-white/10 text-slate-400 hover:text-white hover:bg-white/10'
+              }`}
+              title={isAudioEnabled ? "Mute Comms" : "Enable Audio Comms"}
+            >
+              {isAudioEnabled ? (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
+                </svg>
+              )}
+            </button>
+
+            <button 
+              onClick={onOpenSettings}
+              className="p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all group"
+            >
+              <svg className="w-5 h-5 text-slate-400 group-hover:text-blue-400 group-hover:rotate-45 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -240,7 +283,6 @@ const MissionHeader: React.FC<Props> = ({ phase, setPhase, countdownMs, onOpenSe
           {PHASE_CONFIG.map((p, idx) => {
             const isPast = idx < activePhaseIdx;
             const isActive = idx === activePhaseIdx;
-            const isFuture = idx > activePhaseIdx;
             
             return (
               <React.Fragment key={p.id}>

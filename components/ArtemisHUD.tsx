@@ -17,8 +17,11 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
   const isReturn = elapsedSeconds >= 786780 && elapsedSeconds < 787560;
   const isLanded = elapsedSeconds >= 787560;
 
+  // Deep space window for starlight effects (TLI completion to Re-entry)
+  const isDeepSpace = elapsedSeconds >= 92220 && elapsedSeconds < 786780;
+
   const isSupersonic = velocity > 1234 && isAscent;
-  const isMaxQ = elapsedSeconds >= 60 && elapsedSeconds <= 80;
+  const isMaxQ = elapsedSeconds >= 60 && elapsedSeconds <= 85;
   
   const isBoosterSeparated = elapsedSeconds >= 128;
   const isBoosterSepFlash = elapsedSeconds >= 128 && elapsedSeconds < 131;
@@ -33,54 +36,77 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
 
   const isSolarArrayDeployed = elapsedSeconds >= 13455;
 
+  // Telemetry-driven Environment Physics
+  const atmosphereDensity = Math.max(0, Math.exp(-altitude / 8.5)); // 1.0 at SL, exponential decay
+  const atmosphereOpacity = atmosphereDensity * 0.25;
+  const spaceOpacity = Math.min(1, altitude / 60);
+  const speedFactor = Math.min(1, velocity / 28000);
+
   // Dynamic Pitch (Gravity Turn)
   const pitchAngle = useMemo(() => {
     if (elapsedSeconds < 10) return 0;
-    if (elapsedSeconds < 486) {
+    if (isAscent) {
       return Math.min(80, ((elapsedSeconds - 10) / 476) * 80);
     }
     if (isReturn) return 160; 
     return 85; 
-  }, [elapsedSeconds, isReturn]);
-
-  // Telemetry-driven Environment
-  const atmosphereOpacity = Math.max(0, 1 - altitude / 120);
-  const spaceOpacity = Math.min(1, altitude / 100);
-  const speedFactor = Math.min(1, velocity / 28000);
+  }, [elapsedSeconds, isAscent, isReturn]);
   
   // Re-entry or high-speed ascent atmospheric compression
-  const plasmaIntensity = Math.max(0, (speedFactor * 1.5) * atmosphereOpacity * (altitude > 20 ? 1 : 0)) + (isReturn ? 0.8 : 0);
+  const plasmaIntensity = Math.max(0, (speedFactor * 1.5) * atmosphereDensity * (altitude > 20 ? 1 : 0)) + (isReturn ? 0.8 : 0);
 
-  // ENHANCED: Multi-frequency Camera Shake
-  const shakeIntensity = useMemo(() => {
-    let intensity = 0;
+  // ENHANCED: Physics-accurate Multi-frequency Camera Shake
+  const { shakeX, shakeY, aeroStress } = useMemo(() => {
+    let x = 0;
+    let y = 0;
+    let stress = 0;
+
     if (isAscent) {
-      // Base vibration (high frequency)
-      intensity = Math.sin(elapsedSeconds * 65) * 1.2;
-      // Secondary rumble (low frequency)
-      intensity += Math.sin(elapsedSeconds * 12) * 0.8;
+      // 1. Engine Vibration (High Frequency jitter)
+      const engineVib = (Math.sin(elapsedSeconds * 95.3) * 0.6 + Math.sin(elapsedSeconds * 144.7) * 0.4);
       
-      // Multipliers based on aerodynamic stress
-      if (isMaxQ) intensity *= 4.5;
-      if (isSupersonic) intensity *= 2.2;
+      // 2. Aerodynamic Buffeting (Mid-Freq rumble)
+      // Buffeting peaks at Max Q (Dynamic Pressure)
+      // Max Q Bell Curve: Peaks at 70s, lasts roughly 25s
+      const maxQIntensity = Math.exp(-Math.pow(elapsedSeconds - 70, 2) / 450);
+      const buffetFreq = 18 + Math.sin(elapsedSeconds) * 4;
+      const buffetVib = Math.sin(elapsedSeconds * buffetFreq) * 2.5 * maxQIntensity;
       
-      // Decay slightly as altitude increases and air thins
-      intensity *= (1 - (altitude / 100) * 0.4);
-    } else if (isICPSActive && speedFactor > 0.4) {
-      intensity = Math.sin(elapsedSeconds * 30) * 0.6;
+      stress = maxQIntensity * 100;
+      
+      // Combine and scale by density (vibration stops in vacuum)
+      const totalShake = (engineVib + buffetVib) * (0.3 + (atmosphereDensity * 0.7));
+      
+      x = totalShake * 1.2;
+      y = totalShake * 0.9;
+      
+      if (isSupersonic) { x *= 1.4; y *= 1.4; }
     } else if (isReturn) {
-      // Violent re-entry buffeting
-      intensity = Math.sin(elapsedSeconds * 80) * 6.0;
-      intensity += Math.sin(elapsedSeconds * 15) * 2.5;
+      // High-intensity re-entry shake
+      x = (Math.sin(elapsedSeconds * 80) * 4 + Math.sin(elapsedSeconds * 12) * 2);
+      y = (Math.sin(elapsedSeconds * 70) * 3 + Math.sin(elapsedSeconds * 15) * 1.5);
+      stress = 80;
     }
     
-    // Impact events
+    // Separation Events
     if (isBoosterSepFlash || isCoreSepFlash || isOrionSepFlash) {
-      intensity += Math.sin(elapsedSeconds * 150) * 12;
+      const pulse = Math.sin(elapsedSeconds * 200) * 10;
+      x += pulse;
+      y += pulse;
     }
-    
-    return intensity;
-  }, [elapsedSeconds, isAscent, isMaxQ, isSupersonic, altitude, isICPSActive, speedFactor, isReturn, isBoosterSepFlash, isCoreSepFlash, isOrionSepFlash]);
+
+    return { shakeX: x, shakeY: y, aeroStress: stress };
+  }, [elapsedSeconds, isAscent, isReturn, isSupersonic, atmosphereDensity, isBoosterSepFlash, isCoreSepFlash, isOrionSepFlash]);
+
+  // Enhanced Distortion Scaling
+  const distortionScale = useMemo(() => {
+    if (!isAscent && !isReturn) return 0;
+    // Higher speed + Higher density = More compression / shimmering
+    let scale = (velocity / 4000) * atmosphereDensity * 20;
+    if (isMaxQ) scale *= 1.5;
+    if (isReturn) scale += 30;
+    return Math.min(60, scale);
+  }, [velocity, atmosphereDensity, isAscent, isReturn, isMaxQ]);
 
   const thrustParticles = useMemo(() => {
     if (!isAscent && !isICPSActive) return [];
@@ -101,37 +127,53 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
       <svg className="absolute w-0 h-0 overflow-hidden">
         <defs>
           <filter id="heatHaze">
-            <feTurbulence type="fractalNoise" baseFrequency="0.01 0.05" numOctaves="2" seed={Math.floor(elapsedSeconds % 100)}>
-              <animate attributeName="baseFrequency" dur="10s" values="0.01 0.05;0.01 0.1;0.01 0.05" repeatCount="indefinite" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.02 0.08" numOctaves="4" seed={Math.floor(elapsedSeconds % 100)}>
+              <animate attributeName="baseFrequency" dur="3s" values="0.02 0.08;0.025 0.12;0.02 0.08" repeatCount="indefinite" />
             </feTurbulence>
-            <feDisplacementMap in="SourceGraphic" scale={isMaxQ || isReturn ? "20" : "5"} />
+            <feDisplacementMap in="SourceGraphic" scale={distortionScale} />
           </filter>
         </defs>
       </svg>
 
-      {/* HUD State Indicator */}
-      <div className="absolute top-4 right-4 z-40 flex flex-col items-end space-y-1">
-        <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all duration-500 ${
-          isAscent ? 'bg-orange-500/20 border-orange-500 text-orange-400' :
-          isOrbit ? 'bg-blue-500/20 border-blue-500 text-blue-400' :
-          isReturn ? 'bg-red-500/20 border-red-500 text-red-400' : 'bg-slate-800 border-slate-700 text-slate-500'
+      {/* HUD State & Tactical Readouts */}
+      <div className="absolute top-4 right-4 z-40 flex flex-col items-end space-y-2">
+        <div className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest border transition-all duration-500 flex items-center space-x-2 ${
+          isAscent ? 'bg-orange-500/20 border-orange-500 text-orange-400 shadow-[0_0_10px_rgba(249,115,22,0.2)]' :
+          isOrbit ? 'bg-blue-500/20 border-blue-500 text-blue-400 shadow-[0_0_10px_rgba(59,130,246,0.2)]' :
+          isReturn ? 'bg-red-500/20 border-red-500 text-red-400 shadow-[0_0_100px_rgba(239,68,68,0.2)]' : 'bg-slate-800 border-slate-700 text-slate-500'
         }`}>
-          {isAscent ? 'Propulsion Nominal' : isOrbit ? 'Orbital Operations' : isReturn ? 'Thermal Interface' : 'Stationary'}
+          <div className={`w-1 h-1 rounded-full bg-current ${isAscent || isReturn ? 'animate-ping' : ''}`}></div>
+          <span>{isAscent ? 'Propulsion Nominal' : isOrbit ? 'Orbital Ops' : isReturn ? 'Thermal Interface' : 'Standby'}</span>
         </div>
-        <div className="text-[7px] text-slate-500 mono font-bold tracking-tighter uppercase">
-          Sys_State: {isLanded ? 'SECURE' : 'ACTIVE'}
-        </div>
+        
+        {/* AERO STRESS HUD INDICATOR */}
+        {aeroStress > 5 && (
+          <div className="flex flex-col items-end">
+            <div className="flex items-center space-x-1 mb-1">
+              <span className={`text-[7px] font-black uppercase tracking-widest ${aeroStress > 80 ? 'text-red-500' : 'text-blue-400'}`}>Aero_Stress</span>
+              <span className="text-[9px] mono text-white font-bold">{Math.round(aeroStress)}%</span>
+            </div>
+            <div className="w-24 h-1 bg-slate-900 border border-white/5 rounded-full overflow-hidden">
+              <div className={`h-full transition-all duration-300 ${aeroStress > 80 ? 'bg-red-500' : 'bg-blue-500'}`} style={{ width: `${aeroStress}%` }}></div>
+            </div>
+            {isMaxQ && (
+              <div className="mt-2 text-[10px] text-orange-500 font-black uppercase animate-pulse tracking-tighter shadow-orange-500/20 drop-shadow-md">
+                Critical // Max_Q_Zone
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Atmospheric & Space Effects */}
       <div className="absolute inset-0 pointer-events-none transition-opacity duration-1000" style={{ opacity: atmosphereOpacity, background: 'radial-gradient(circle at 50% 100%, rgba(59, 130, 246, 0.2) 0%, transparent 90%)' }}></div>
       <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ opacity: spaceOpacity }}>
         {Array.from({ length: 40 }).map((_, i) => (
-          <div key={`star-${i}`} className="absolute bg-white rounded-full" style={{ left: `${(i * 137.45) % 100}%`, top: `${(i * 71.89) % 100}%`, width: `${0.5 + (i % 1)}px`, height: `${0.5 + (i % 1)}px`, opacity: 0.1 + Math.random() * 0.4, animation: `starFlow ${5 + (1 - speedFactor) * 25}s linear infinite`, animationDelay: `-${Math.random() * 20}s` }} />
+          <div key={`star star-${i}`} className="absolute bg-white rounded-full" style={{ left: `${(i * 137.45) % 100}%`, top: `${(i * 71.89) % 100}%`, width: `${0.5 + (i % 1)}px`, height: `${0.5 + (i % 1)}px`, opacity: 0.1 + Math.random() * 0.4, animation: `starFlow ${5 + (1 - speedFactor) * 25}s linear infinite`, animationDelay: `-${Math.random() * 20}s` }} />
         ))}
       </div>
 
-      {/* Re-entry / Ascent Glow & ENHANCED Distortion Layer */}
+      {/* Re-entry / Ascent Glow Layer */}
       {(plasmaIntensity > 0.05 || isReturn) && (
         <div 
           className="absolute inset-0 pointer-events-none z-20 mix-blend-screen transition-opacity duration-700" 
@@ -141,21 +183,21 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             filter: 'url(#heatHaze)' 
           }}
         >
-           {/* Turbulence shimmer effect */}
            <div className="absolute inset-0 opacity-30 animate-pulse bg-[url('https://www.transparenttextures.com/patterns/asfalt-dark.png')] bg-fixed"></div>
         </div>
       )}
 
-      {/* ROCKET VIEWPORT - High frequency translate for shake */}
+      {/* ROCKET VIEWPORT - High frequency transformation for shake */}
       <div 
-        className="relative w-full h-full flex items-center justify-center transition-all duration-[40ms] ease-out scale-[0.45] sm:scale-[0.55] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.6]" 
+        className="relative w-full h-full flex items-center justify-center transition-all duration-[30ms] ease-out scale-[0.45] sm:scale-[0.55] md:scale-[0.6] lg:scale-[0.5] xl:scale-[0.6]" 
         style={{ 
-          transform: `translate(${shakeIntensity}px, ${shakeIntensity * 0.8}px)`, 
+          transform: `translate(${shakeX}px, ${shakeY}px)`, 
           perspective: '2000px',
-          filter: (isAscent && velocity > 5000) || isReturn ? 'url(#heatHaze)' : 'none'
+          filter: distortionScale > 3 ? 'url(#heatHaze)' : 'none',
+          backdropFilter: aeroStress > 10 ? `blur(${Math.min(2, aeroStress / 50)}px)` : 'none'
         }}
       >
-        <div className="relative preserve-3d transition-transform duration-[1200ms] ease-out-expo" style={{ transform: `rotateX(${pitchAngle}deg)`, transformStyle: 'preserve-3d' }}>
+        <div className="relative preserve-3d transition-transform duration-[1500ms] ease-out-expo" style={{ transform: `rotateX(${pitchAngle}deg)`, transformStyle: 'preserve-3d' }}>
           
           {/* ORION ASSEMBLY */}
           <div className={`relative preserve-3d transition-all duration-[3500ms] ${isOrionSeparated ? 'translate-z-[300px] translate-y-[-400px] rotate-x-[15deg] scale-[1.1]' : ''}`}>
@@ -172,9 +214,14 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
             </div>
 
             {/* Orion Capsule */}
-            <div className={`w-16 h-14 bg-slate-50 mx-auto relative z-10 transition-all duration-1000 ${isOrionSepFlash ? 'brightness-200 scale-125 shadow-[0_0_100px_#fff]' : ''} ${isOrbit && !isReturn ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)]' : ''}`} style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)' }}>
+            <div className={`w-16 h-14 bg-slate-50 mx-auto relative z-10 transition-all duration-1000 overflow-hidden ${isOrionSepFlash ? 'brightness-200 scale-125 shadow-[0_0_100px_#fff]' : ''} ${isOrbit && !isReturn ? 'shadow-[0_0_40px_rgba(59,130,246,0.4)]' : ''}`} style={{ clipPath: 'polygon(30% 0%, 70% 0%, 100% 100%, 0% 100%)' }}>
                <div className="absolute inset-0 bg-gradient-to-tr from-white/40 via-transparent to-black/30"></div>
                
+               {/* STARLIGHT REFLECTION - Orion Capsule */}
+               {isDeepSpace && (
+                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full animate-[starlightSweep_12s_ease-in-out_infinite] pointer-events-none"></div>
+               )}
+
                {isOrbit && (
                  <>
                    <div className="absolute inset-0 bg-blue-400/5 animate-pulse"></div>
@@ -225,9 +272,14 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
 
           {/* SLS CORE STAGE & SIDE BOOSTERS */}
           <div className={`transition-all duration-[5500ms] ease-out-expo ${isCoreSeparated ? 'translate-y-[1200px] opacity-0 rotate-x-[-90deg]' : ''}`}>
-            <div className="relative preserve-3d w-24 h-[420px] bg-[#e67e22] mx-auto -mt-1 shadow-2xl border-x border-[#d35400]/50">
+            <div className="relative preserve-3d w-24 h-[420px] bg-[#e67e22] mx-auto -mt-1 shadow-2xl border-x border-[#d35400]/50 overflow-hidden">
               <div className="absolute inset-0 bg-[repeating-linear-gradient(rgba(0,0,0,0.1)_0px,rgba(0,0,0,0.1)_2px,transparent_2px,transparent_8px)] opacity-30"></div>
               
+              {/* STARLIGHT REFLECTION - Core Stage */}
+              {isDeepSpace && (
+                <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent -translate-x-full animate-[starlightSweep_15s_ease-in-out_infinite_1s] pointer-events-none"></div>
+              )}
+
               {isPreLaunch && (
                 <div className="absolute inset-0 bg-white/5 animate-pulse overflow-hidden">
                    <div className="absolute top-1/4 left-0 w-full h-20 bg-white/10 blur-xl animate-venting"></div>
@@ -250,20 +302,21 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                       <div className="absolute -bottom-72 left-1/2 -translate-x-1/2 w-24 h-[450px] z-[-1]">
                          <div className="w-full h-full bg-gradient-to-b from-orange-400 via-orange-600/30 to-transparent blur-[40px] animate-pulse"></div>
                          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-14 h-80 bg-white/95 blur-xl shadow-[0_0_60px_#fff]"></div>
-                         {/* Mach Shock Diamonds for SRB */}
-                         {isSupersonic && (
-                            <div className="absolute top-20 left-1/2 -translate-x-1/2 flex flex-col items-center space-y-8 opacity-40">
-                               <div className="w-10 h-2 bg-white/40 blur-[1px] rounded-full animate-pulse"></div>
-                               <div className="w-8 h-2 bg-white/30 blur-[1px] rounded-full animate-pulse"></div>
-                            </div>
-                         )}
                       </div>
                     )}
                   </div>
                 ))}
               </div>
 
-              {/* CORE STAGE ENGINE GLOW PULSE */}
+              {/* BOOSTER SEPARATION FLARE */}
+              {isBoosterSepFlash && (
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 z-50 pointer-events-none">
+                  <div className="w-full h-full bg-white rounded-full blur-[60px] animate-ping opacity-90"></div>
+                  <div className="absolute inset-0 w-full h-full bg-orange-400 rounded-full blur-[80px] animate-pulse opacity-60"></div>
+                </div>
+              )}
+
+              {/* CORE STAGE ENGINE GLOW */}
               {isAscent && !isCoreSeparated && (
                 <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-32 h-32 pointer-events-none z-10">
                    <div className="w-full h-full bg-gradient-to-t from-orange-500/80 via-yellow-400/40 to-transparent blur-2xl rounded-full animate-[enginePulse_0.15s_infinite]"></div>
@@ -274,13 +327,9 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
               {/* CORE STAGE RS-25 ENGINES */}
               {isAscent && !isCoreSeparated && (
                 <div className="absolute -bottom-96 left-1/2 -translate-x-1/2 flex flex-col items-center">
-                  {/* Heat haze distortion effect around engines */}
                   <div className="absolute -top-10 w-48 h-48 bg-blue-500/5 blur-3xl animate-venting scale-150"></div>
-                  
                   <div className="w-40 h-[600px] bg-gradient-to-b from-orange-500/50 via-red-900/10 to-transparent blur-[80px]"></div>
                   <div className="absolute top-0 w-20 h-96 bg-gradient-to-b from-cyan-400/80 via-blue-600/20 to-transparent blur-3xl animate-pulse opacity-90"></div>
-                  
-                  {/* Dense Thrust Particles */}
                   {thrustParticles.map(p => (
                     <div 
                       key={p.id} 
@@ -295,9 +344,6 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
                       }} 
                     />
                   ))}
-
-                  {/* Heat Distortion Overlay */}
-                  <div className="absolute top-0 w-32 h-64 bg-white/5 blur-3xl rounded-full scale-150 animate-pulse mix-blend-overlay"></div>
                 </div>
               )}
             </div>
@@ -334,10 +380,12 @@ const ArtemisHUD: React.FC<Props> = ({ elapsedSeconds, telemetry, hideContainer 
           0%, 100% { opacity: 0.7; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.1); }
         }
-        .animate-blink-fast { animation: blink-fast 0.8s infinite; }
-        .animate-blink-slow { animation: blink-slow 2.5s infinite; }
-        .animate-venting { animation: venting 5s ease-in-out infinite; }
-        .animate-sweep { animation: sweep 8s linear infinite; }
+        @keyframes starlightSweep {
+          0% { transform: translateX(-200%) rotate(45deg); opacity: 0; }
+          20%, 30% { opacity: 0.6; }
+          40% { transform: translateX(200%) rotate(45deg); opacity: 0; }
+          100% { transform: translateX(200%) rotate(45deg); opacity: 0; }
+        }
         .preserve-3d { transform-style: preserve-3d; }
         .ease-out-expo { transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1); }
       `}</style>

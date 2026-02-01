@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 
 interface Props {
@@ -11,18 +10,31 @@ interface Props {
 const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose }) => {
   const [tempIds, setTempIds] = useState([...videoIds]);
   
-  // Format Date for datetime-local input (YYYY-MM-DDTHH:mm:ss)
-  const formatDateForInput = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const hours = String(date.getHours()).padStart(2, '0');
-    const minutes = String(date.getMinutes()).padStart(2, '0');
-    const seconds = String(date.getSeconds()).padStart(2, '0');
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+  /**
+   * Formats a Date object specifically to the America/New_York timezone string
+   * compatible with the datetime-local input field.
+   */
+  const formatDateForETInput = (date: Date) => {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+    });
+    
+    const parts = formatter.formatToParts(date);
+    const p: Record<string, string> = {};
+    parts.forEach(({ type, value }) => { p[type] = value; });
+    
+    // Returns YYYY-MM-DDTHH:mm:ss
+    return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
   };
 
-  const [tempDateStr, setTempDateStr] = useState(formatDateForInput(launchDate));
+  const [tempDateStr, setTempDateStr] = useState(formatDateForETInput(launchDate));
 
   const handleIdChange = (idx: number, val: string) => {
     let id = val;
@@ -40,7 +52,18 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
   };
 
   const handleSave = () => {
-    const newDate = new Date(tempDateStr);
+    // To parse the tempDateStr (which is YYYY-MM-DDTHH:mm:ss) as Eastern Time:
+    // We create a temporary date to find what the ET offset is for that specific date
+    const dummyDate = new Date(tempDateStr);
+    const etOffsetPart = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      timeZoneName: 'shortOffset'
+    }).format(dummyDate).split('GMT')[1]; // returns e.g. "-5" or "-4"
+
+    // Construct a full ISO string with the determined offset
+    const isoWithOffset = `${tempDateStr}${etOffsetPart}:00`;
+    const newDate = new Date(isoWithOffset);
+
     if (!isNaN(newDate.getTime())) {
       onSave(tempIds, newDate);
     }
@@ -81,11 +104,14 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
               <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Launch Parameters</h3>
               <div className="flex items-center space-x-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[9px] text-emerald-500 mono font-bold">SYNC_TARGET</span>
+                <span className="text-[9px] text-emerald-500 mono font-bold">EST/EDT SYNC</span>
               </div>
             </div>
             <div>
-              <label className="text-[9px] text-slate-400 uppercase tracking-widest block mb-1">Target Launch Time (Local Window)</label>
+              <div className="flex justify-between items-baseline mb-1">
+                <label className="text-[9px] text-slate-400 uppercase tracking-widest block">Target Launch Time (Eastern Time)</label>
+                <span className="text-[7px] text-blue-500 font-bold uppercase tracking-tighter bg-blue-500/10 px-1 rounded">KSC Reference</span>
+              </div>
               <input 
                 type="datetime-local" 
                 step="1"
@@ -95,7 +121,7 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
               />
               <div className="mt-3 p-3 rounded bg-slate-900/50 border border-slate-800">
                 <p className="text-[9px] text-slate-500 mono leading-relaxed uppercase">
-                  Adjusting the launch window will recalculate the L-Minus countdown and all relative mission milestones in real-time.
+                  Launch time is set in Eastern Time (Florida). The mission clock will auto-convert this to UTC for global synchronization.
                 </p>
               </div>
             </div>

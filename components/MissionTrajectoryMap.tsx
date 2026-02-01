@@ -1,4 +1,3 @@
-
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 interface Props {
@@ -26,7 +25,7 @@ const MILESTONES: Milestone[] = [
     label: "Launch and Ascent", 
     shortLabel: "LIFT",
     description: "The SLS rocket ignites and Orion begins its climb to Earth orbit.", 
-    objective: "Execute nominal vertical ascent and achieve initial Earth orbit insertion.",
+    objective: "Execute nominal vertical ascent and achieve initial Earth orbit insertion while validating SLS performance parameters.",
     historicalFact: "Artemis II is the first crewed mission to the lunar vicinity in over 50 years.",
     missionFact: "Maximum dynamic pressure (Max-Q) occurs at approximately 70 seconds.",
     x: 21, y: 34, t: 0, color: "#3b82f6" 
@@ -36,7 +35,7 @@ const MILESTONES: Milestone[] = [
     label: "HEO Perigee Raise", 
     shortLabel: "HEO",
     description: "Engine burn to reach High Earth Orbit for 24 hours of system testing.", 
-    objective: "Verify life support systems and proximity operations in high Earth orbit.",
+    objective: "Verify life support systems, comms, and proximity operations in high Earth orbit environment before TLI.",
     historicalFact: "HEO testing ensures life support systems are fully operational before TLI.",
     missionFact: "Orion's first burn in space to raise perigee from Earth's atmosphere.",
     x: 32, y: 23, t: 2940, color: "#60a5fa" 
@@ -46,7 +45,7 @@ const MILESTONES: Milestone[] = [
     label: "Translunar Injection", 
     shortLabel: "TLI",
     description: "The ICPS upper stage sends the crew on their trajectory toward the Moon.", 
-    objective: "Perform high-delta-V burn to depart Earth SOI and intercept lunar gravity.",
+    objective: "Perform high-delta-V burn to depart Earth SOI and achieve a precision lunar intercept trajectory.",
     historicalFact: "TLI marks the departure from Earth's immediate influence.",
     missionFact: "The ICPS provides the massive impulse needed to reach lunar distances.",
     x: 48, y: 22, t: 92220, color: "#10b981" 
@@ -56,7 +55,7 @@ const MILESTONES: Milestone[] = [
     label: "Lunar Flyby", 
     shortLabel: "FLYBY",
     description: "Orion passes behind the Moon, using gravity for a free return to Earth.", 
-    objective: "Utilize lunar gravity for free-return trajectory and conduct farside observations.",
+    objective: "Utilize lunar gravity for free-return trajectory and conduct critical deep space optical navigation and farside observations.",
     historicalFact: "The flyby provides a spectacular view of the Lunar Farside.",
     missionFact: "Altitude drops to approx 10,000km above the lunar surface.",
     x: 82, y: 58, t: 436980, color: "#f1f5f9" 
@@ -66,7 +65,7 @@ const MILESTONES: Milestone[] = [
     label: "Transearth Coast", 
     shortLabel: "TEC",
     description: "The long journey back to Earth following the lunar gravity assist.", 
-    objective: "Maintain thermal management and crew health during the 4-day transit back to Earth.",
+    objective: "Validate long-duration thermal management and crew health metrics during high-velocity return transit.",
     historicalFact: "The free-return trajectory is a safety-first flight design.",
     missionFact: "Velocity gradually increases as Orion is pulled back by Earth's gravity.",
     x: 45, y: 70, t: 550000, color: "#3b82f6" 
@@ -76,7 +75,7 @@ const MILESTONES: Milestone[] = [
     label: "Re-entry and Splashdown", 
     shortLabel: "SPLASH",
     description: "Orion enters atmosphere and splashes down in the Pacific Ocean.", 
-    objective: "Demonstrate heat shield performance at lunar re-entry speeds and safe crew recovery.",
+    objective: "Demonstrate thermal protection system performance at lunar return speeds and execute precise crew module recovery sequence.",
     historicalFact: "Artemis II splashdown targets the coast of San Diego.",
     missionFact: "The skip-entry maneuver bleeds off 25,000 mph of velocity.",
     x: 18, y: 38, t: 787560, color: "#ef4444" 
@@ -195,15 +194,9 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
             {/* Earth with Enhanced Diurnal Rotation Effect */}
             <g transform="translate(20, 35)">
-               {/* Atmospheric Halo */}
                <circle r="7.8" fill="none" stroke="#3b82f6" strokeWidth="0.4" className="opacity-10" />
-
-               {/* Planet Body */}
                <circle r="7" fill="#0f172a" stroke="#3b82f6" strokeWidth="0.2" className="opacity-90" />
-               
-               {/* Surface Detail Layer (Landmasses) */}
                <g clipPath="url(#earthClip)">
-                  {/* Land Layer */}
                   <g className="animate-earth-land-rotation">
                     <path d="M -15,0 Q -12,-3 -9,0 T -3,0 T 3,0 T 9,0" fill="none" stroke="#3b82f6" strokeWidth="2.5" className="opacity-30" />
                     <path d="M -15,4 Q -12,1 -9,4 T -3,4 T 3,4 T 9,4" fill="none" stroke="#3b82f6" strokeWidth="2.0" className="opacity-25" />
@@ -212,8 +205,6 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                        <path d="M -15,4 Q -12,1 -9,4 T -3,4 T 3,4 T 9,4" fill="none" stroke="#3b82f6" strokeWidth="2.0" className="opacity-25" />
                     </g>
                   </g>
-
-                  {/* Cloud Layer (Faster) */}
                   <g className="animate-earth-cloud-rotation">
                     <path d="M -12,-2 Q -10,0 -8,-2 T -4,-2 T 0,-2 T 4,-2" fill="none" stroke="#fff" strokeWidth="0.6" className="opacity-20" />
                     <path d="M -12,2 Q -10,4 -8,2 T -4,2 T 0,2 T 4,2" fill="none" stroke="#fff" strokeWidth="0.4" className="opacity-15" />
@@ -222,11 +213,8 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
                        <path d="M -12,2 Q -10,4 -8,2 T -4,2 T 0,2 T 4,2" fill="none" stroke="#fff" strokeWidth="0.4" className="opacity-15" />
                     </g>
                   </g>
-
-                  {/* Fixed Shadow Overlay */}
                   <circle r="7" fill="url(#earthShadow)" />
                </g>
-
                <text y="12" textAnchor="middle" className="text-[3px] mono fill-blue-400/60 font-bold uppercase tracking-widest">Earth</text>
             </g>
 
@@ -257,38 +245,53 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
           </svg>
 
           {selectedMilestone && (
-            <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-blue-500/30 rounded-lg p-3 backdrop-blur-md shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-300 z-50 overflow-y-auto max-h-[80%] custom-scrollbar">
-              <div className="flex justify-between items-start">
+            <div className="absolute bottom-4 left-4 right-4 bg-slate-900/95 border border-blue-500/40 rounded-xl p-4 backdrop-blur-xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] animate-in fade-in slide-in-from-bottom-4 duration-500 z-50 overflow-y-auto max-h-[85%] custom-scrollbar">
+              <div className="flex justify-between items-start mb-3">
                 <div className="flex flex-col">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: selectedMilestone.color }}></div>
-                    <h4 className="text-[10px] font-black text-white uppercase tracking-widest">{selectedMilestone.label}</h4>
+                    <div className="w-2.5 h-2.5 rounded-sm rotate-45" style={{ backgroundColor: selectedMilestone.color }}></div>
+                    <h4 className="text-[11px] font-black text-white uppercase tracking-[0.2em]">{selectedMilestone.label}</h4>
                   </div>
                   {isSynced && selectedMilestone.id === currentActiveMilestone.id && (
-                    <div className="flex items-center space-path-1 mt-0.5">
-                      <span className="text-[7px] mono text-emerald-400 font-bold animate-pulse">● Live Tracking</span>
+                    <div className="flex items-center space-x-1.5 mt-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      <span className="text-[7px] mono text-emerald-400 font-bold uppercase tracking-tighter">Live Orbital Tracking</span>
                     </div>
                   )}
                 </div>
-                <button onClick={() => { setSelectedMilestone(null); setIsSynced(false); }} className="text-slate-500 hover:text-white transition-colors">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" /></svg>
+                <button onClick={() => { setSelectedMilestone(null); setIsSynced(false); }} className="text-slate-500 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-lg">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
               </div>
-              <p className="text-[8px] text-slate-400 mt-1 italic leading-tight">"{selectedMilestone.description}"</p>
-              
-              <div className="mt-3 p-2 bg-blue-500/10 border border-blue-500/20 rounded">
-                <span className="text-[7px] text-blue-400 font-bold uppercase block tracking-widest mb-1">Primary Mission Objective</span>
-                <p className="text-[9px] text-slate-200 leading-tight">{selectedMilestone.objective}</p>
+
+              {/* MISSION OBJECTIVE HIGHLIGHT */}
+              <div className="mb-4 bg-blue-600/10 border border-blue-500/30 rounded-lg p-3 relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-2 opacity-10 group-hover:opacity-20 transition-opacity">
+                   <svg className="w-8 h-8 text-blue-400" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10 10-4.47 10-10S17.53 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
+                   </svg>
+                </div>
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-[8px] text-blue-400 font-black uppercase tracking-[0.3em]">Primary Mission Objective</span>
+                  <div className="h-px flex-1 bg-blue-500/20"></div>
+                </div>
+                <p className="text-[10px] text-blue-100 leading-relaxed font-medium italic shadow-blue-500/20">
+                  {selectedMilestone.objective}
+                </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mt-3 pt-3 border-t border-slate-800">
+              <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-800">
                  <div>
-                    <span className="text-[7px] text-blue-400 font-bold uppercase block">Technical Detail</span>
-                    <p className="text-[7px] text-slate-400 leading-tight">{selectedMilestone.missionFact}</p>
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block tracking-widest mb-1">Operational Detail</span>
+                    <p className="text-[8px] text-slate-400 leading-tight italic">"{selectedMilestone.description}"</p>
+                    <p className="text-[8px] text-slate-300 mt-2 leading-tight">{selectedMilestone.missionFact}</p>
                  </div>
-                 <div className="text-right">
-                    <span className="text-[7px] text-slate-500 font-bold uppercase block">Relative MET</span>
-                    <p className="text-[7px] text-slate-500 mono tabular-nums">{selectedMilestone.t.toLocaleString()}s</p>
+                 <div className="flex flex-col items-end justify-center">
+                    <span className="text-[8px] text-slate-500 font-bold uppercase block tracking-widest mb-1">Mission Clock</span>
+                    <p className="text-[12px] text-white mono font-black tabular-nums tracking-tighter">T+{selectedMilestone.t.toLocaleString()}s</p>
+                    <div className="mt-2 px-2 py-0.5 bg-slate-800 rounded text-[7px] text-slate-400 font-bold uppercase tracking-widest">
+                       Rel Velocity: Nominal
+                    </div>
                  </div>
               </div>
             </div>

@@ -30,8 +30,12 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
     const p: Record<string, string> = {};
     parts.forEach(({ type, value }) => { p[type] = value; });
     
+    // Handle edge case where hour12: false returns "24" for midnight
+    let hour = p.hour;
+    if (hour === '24') hour = '00';
+    
     // Returns YYYY-MM-DDTHH:mm:ss
-    return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}:${p.second}`;
+    return `${p.year}-${p.month}-${p.day}T${hour}:${p.minute}:${p.second}`;
   };
 
   const [tempDateStr, setTempDateStr] = useState(formatDateForETInput(launchDate));
@@ -52,26 +56,47 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
   };
 
   const handleSave = () => {
-    // To parse the tempDateStr (which is YYYY-MM-DDTHH:mm:ss) as Eastern Time:
-    // We create a temporary date to find what the ET offset is for that specific date
-    const dummyDate = new Date(tempDateStr);
-    const etOffsetPart = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/New_York',
-      timeZoneName: 'shortOffset'
-    }).format(dummyDate).split('GMT')[1]; // returns e.g. "-5" or "-4"
+    try {
+      // tempDateStr is in YYYY-MM-DDTHH:mm:ss format (Wall clock time in ET)
+      // We need to determine the UTC offset for this specific wall time in New York.
+      const dummyDate = new Date(tempDateStr);
+      
+      // Get the offset string for America/New_York at that point in time
+      // Result is typically "GMT-05:00" or similar
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'America/New_York',
+        timeZoneName: 'longOffset'
+      });
+      
+      const formattedParts = formatter.formatToParts(dummyDate);
+      const offsetPart = formattedParts.find(p => p.type === 'timeZoneName')?.value || "";
+      
+      // Extract the ±HH:mm part (e.g., -05:00)
+      const offsetMatch = offsetPart.match(/[+-]\d{2}:?\d{2}/);
+      const offset = offsetMatch ? offsetMatch[0] : "-05:00";
+      
+      // Ensure offset is in ±HH:mm format for ISO 8601 parsing
+      let finalOffset = offset;
+      if (offset.length === 5 && !offset.includes(':')) {
+        finalOffset = offset.substring(0, 3) + ":" + offset.substring(3);
+      }
 
-    // Construct a full ISO string with the determined offset
-    const isoWithOffset = `${tempDateStr}${etOffsetPart}:00`;
-    const newDate = new Date(isoWithOffset);
+      const isoWithOffset = `${tempDateStr}${finalOffset}`;
+      const newDate = new Date(isoWithOffset);
 
-    if (!isNaN(newDate.getTime())) {
-      onSave(tempIds, newDate);
+      if (!isNaN(newDate.getTime())) {
+        onSave(tempIds, newDate);
+      } else {
+        console.error("Mission Control: Invalid Launch Date generated", isoWithOffset);
+      }
+    } catch (err) {
+      console.error("Mission Control: Configuration save failed", err);
     }
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md">
-      <div className="glass w-full max-w-md border border-slate-700 rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="glass w-full max-w-md border border-slate-700 rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
         <div className="bg-slate-900 p-4 border-b border-slate-800 flex items-center justify-between">
           <h2 className="text-sm font-bold mono tracking-widest text-slate-100 uppercase">Mission Configuration</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-white text-2xl transition-colors">&times;</button>
@@ -104,7 +129,7 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
               <h3 className="text-[10px] text-slate-500 uppercase tracking-[0.2em] font-bold">Launch Parameters</h3>
               <div className="flex items-center space-x-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span className="text-[9px] text-emerald-500 mono font-bold">EST/EDT SYNC</span>
+                <span className="text-[9px] text-emerald-500 mono font-bold uppercase">EST/EDT SYNC</span>
               </div>
             </div>
             <div>
@@ -121,7 +146,7 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
               />
               <div className="mt-3 p-3 rounded bg-slate-900/50 border border-slate-800">
                 <p className="text-[9px] text-slate-500 mono leading-relaxed uppercase">
-                  Launch time is set in Eastern Time (Florida). The mission clock will auto-convert this to UTC for global synchronization.
+                  Clock synchronized to Kennedy Space Center (Florida). Date/time input uses Wall Clock time.
                 </p>
               </div>
             </div>

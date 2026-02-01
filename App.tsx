@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { MissionPhase, TelemetryData } from './types';
 import MissionHeader from './components/MissionHeader';
 import { PrimaryFeed, SecondaryFeeds } from './components/LiveFeeds';
@@ -55,6 +56,7 @@ const App: React.FC = () => {
     return (currentMs - launchDate.getTime()) / 1000;
   }, [currentMs, launchDate]);
 
+  // Sync config to storage
   useEffect(() => {
     const config = {
       videoIds,
@@ -63,11 +65,15 @@ const App: React.FC = () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }, [videoIds, launchDate]);
 
+  // Global Reset: Clear telemetry graphs when flight plan changes
+  useEffect(() => {
+    setTelemetryHistory([]);
+  }, [launchDate]);
+
   // Phase transition handling logic
   useEffect(() => {
     if (phase !== displayPhase) {
       setIsPhaseTransitioning(true);
-      // Wait for exit animation to complete (0.4s)
       const timer = setTimeout(() => {
         setDisplayPhase(phase);
         setIsPhaseTransitioning(false);
@@ -86,31 +92,41 @@ const App: React.FC = () => {
     return { timestamp: Date.now(), altitude: alt, velocity: vel, fuel: Math.max(0, 100 - (t / 100)), heartRate: 70 + Math.random() * 5 };
   }, [elapsedSeconds]);
 
+  // Master Mission Clock & Phase Engine
   useEffect(() => {
     const timer = setInterval(() => {
       const now = Date.now();
       setCurrentMs(now);
       const t = (now - launchDate.getTime()) / 1000;
       
-      if (t < 0) setPhase(MissionPhase.PRE_LAUNCH);
-      else if (t < 486) setPhase(MissionPhase.ASCENT);
-      else if (t < 92220) setPhase(MissionPhase.ORBIT);
-      else if (t < 436980) setPhase(MissionPhase.LUNAR_FLYBY);
-      else if (t < 786780) setPhase(MissionPhase.RETURN);
-      else setPhase(MissionPhase.SPLASHDOWN);
+      let newPhase: MissionPhase;
+      if (t < 0) newPhase = MissionPhase.PRE_LAUNCH;
+      else if (t < 486) newPhase = MissionPhase.ASCENT;
+      else if (t < 92220) newPhase = MissionPhase.ORBIT;
+      else if (t < 436980) newPhase = MissionPhase.LUNAR_FLYBY;
+      else if (t < 786780) newPhase = MissionPhase.RETURN;
+      else newPhase = MissionPhase.SPLASHDOWN;
+      
+      if (newPhase !== phase) setPhase(newPhase);
     }, 50); 
     return () => clearInterval(timer);
-  }, [launchDate]);
+  }, [launchDate, phase]);
+
+  // Optimized Telemetry History Recording
+  const telemetryRef = useRef(telemetry);
+  useEffect(() => {
+    telemetryRef.current = telemetry;
+  }, [telemetry]);
 
   useEffect(() => {
     const historyTimer = setInterval(() => {
       setTelemetryHistory(prev => {
-        const next = [...prev, telemetry];
+        const next = [...prev, telemetryRef.current];
         return next.length > HISTORY_LIMIT ? next.slice(1) : next;
       });
     }, 1000);
     return () => clearInterval(historyTimer);
-  }, [telemetry]);
+  }, []);
 
   const handlePromoteToPrimary = (index: number) => {
     const actualIndex = index + 1;
@@ -170,7 +186,12 @@ const App: React.FC = () => {
 
             <div className="col-span-12 lg:col-span-5 flex h-full min-h-0 space-x-4">
               <div className="flex-1 min-h-0 h-full">
-                <MultiViewMonitor elapsedSeconds={elapsedSeconds} telemetry={telemetry} telemetryHistory={telemetryHistory} />
+                <MultiViewMonitor 
+                  key={`monitor-${launchDate.getTime()}`} 
+                  elapsedSeconds={elapsedSeconds} 
+                  telemetry={telemetry} 
+                  telemetryHistory={telemetryHistory} 
+                />
               </div>
               <div 
                 key={`timeline-transition-${displayPhase}`}

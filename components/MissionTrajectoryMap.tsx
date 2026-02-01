@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useEffect, useState } from 'react';
 
 interface Props {
@@ -96,6 +97,16 @@ const MissionTrajectoryMap: React.FC<Props> = ({ elapsedSeconds, hideContainer }
 
   const pathRef = useRef<SVGPathElement>(null);
   const [indicatorPos, setIndicatorPos] = useState({ x: 0, y: 0, angle: 0 });
+
+  // Watch for timeline resets/jumps and force re-sync
+  const lastElapsed = useRef(elapsedSeconds);
+  useEffect(() => {
+    const delta = Math.abs(elapsedSeconds - lastElapsed.current);
+    if (delta > 60) { // If jump is more than 1 minute, assume manual update/reset
+      setIsSynced(true);
+    }
+    lastElapsed.current = elapsedSeconds;
+  }, [elapsedSeconds]);
 
   useEffect(() => {
     if (pathRef.current) {

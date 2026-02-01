@@ -3,11 +3,11 @@ import { MissionPhase, TelemetryData } from "../types";
 
 // Realistic fallback data for Artemis II to ensure UI stability during rate limits
 const MISSION_FALLBACK_UPDATES = [
-  { timestamp: "Feb 2025", content: "Core Stage RS-25 engine flight readiness reviews completed at Stennis Space Center." },
-  { timestamp: "Jan 2025", content: "Orion spacecraft vacuum chamber testing successfully concluded; life support systems nominal." },
-  { timestamp: "Dec 2024", content: "Ground Systems team completes Mobile Launcher 1 umbilical swing-arm retraction tests at LC-39B." },
-  { timestamp: "Nov 2024", content: "Artemis II crew (Wiseman, Glover, Koch, Hansen) completes geology training and splashdown recovery drills." },
-  { timestamp: "Oct 2024", content: "SLS Solid Rocket Booster segments arrived at Kennedy Space Center for stack integration." }
+  { timestamp: "Feb 2025", content: "Core Stage RS-25 engine flight readiness reviews completed at Stennis Space Center.", url: "https://www.nasa.gov/blogs/artemis/" },
+  { timestamp: "Jan 2025", content: "Orion spacecraft vacuum chamber testing successfully concluded; life support systems nominal.", url: "https://www.nasa.gov/blogs/artemis/" },
+  { timestamp: "Dec 2024", content: "Ground Systems team completes Mobile Launcher 1 umbilical swing-arm retraction tests at LC-39B.", url: "https://www.nasa.gov/blogs/artemis/" },
+  { timestamp: "Nov 2024", content: "Artemis II crew (Wiseman, Glover, Koch, Hansen) completes geology training and splashdown recovery drills.", url: "https://www.nasa.gov/blogs/artemis/" },
+  { timestamp: "Oct 2024", content: "SLS Solid Rocket Booster segments arrived at Kennedy Space Center for stack integration.", url: "https://www.nasa.gov/blogs/artemis/" }
 ];
 
 // Singleton to prevent concurrent identical requests
@@ -77,7 +77,14 @@ export const getLatestNASANews = async () => {
     if (!ai) return MISSION_FALLBACK_UPDATES;
 
     try {
-      const prompt = "Retrieve the 5 most recent official mission updates for NASA's Artemis II (2024-2025). Return as JSON list with 'timestamp' and 'content'.";
+      const prompt = `Access the official NASA Artemis blog at https://www.nasa.gov/blogs/artemis/ and retrieve the 5 most recent mission updates. 
+      For each update, provide:
+      1. 'timestamp': The publication date exactly as listed.
+      2. 'content': A concise 1-2 sentence summary of the update.
+      3. 'url': The direct link to that specific blog post.
+      
+      Focus on Artemis II mission preparation, SLS hardware integration, and crew training milestones. 
+      Return the results as a clean JSON object with an 'updates' array.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
@@ -95,9 +102,10 @@ export const getLatestNASANews = async () => {
                   type: Type.OBJECT,
                   properties: {
                     timestamp: { type: Type.STRING },
-                    content: { type: Type.STRING }
+                    content: { type: Type.STRING },
+                    url: { type: Type.STRING, description: "URL to the source blog post" }
                   },
-                  required: ["timestamp", "content"]
+                  required: ["timestamp", "content", "url"]
                 }
               }
             },

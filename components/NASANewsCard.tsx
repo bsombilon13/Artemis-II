@@ -4,6 +4,7 @@ import { getLatestNASANews } from '../services/geminiService';
 interface NASAUpdate {
   timestamp: string;
   content: string;
+  url?: string;
 }
 
 const NASANewsCard: React.FC = () => {
@@ -64,7 +65,7 @@ const NASANewsCard: React.FC = () => {
           {updates.map((update, idx) => (
             <div 
               key={idx} 
-              className="p-3 border-b border-slate-800/50 hover:bg-blue-500/5 transition-colors group"
+              className="p-3 border-b border-slate-800/50 hover:bg-blue-500/5 transition-colors group relative"
             >
               <div className="flex items-center justify-between mb-1.5">
                 <div className="flex items-center space-x-2">
@@ -76,8 +77,32 @@ const NASANewsCard: React.FC = () => {
               <p className="text-[10px] text-slate-300 leading-relaxed tracking-tight font-medium">
                 {update.content}
               </p>
+              {update.url && (
+                <a 
+                  href={update.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="mt-2 inline-flex items-center space-x-1 text-[8px] text-blue-400/60 hover:text-blue-400 transition-colors uppercase font-bold tracking-wider"
+                >
+                  <span>Read Full Post</span>
+                  <svg className="w-2 h-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              )}
             </div>
           ))}
+
+          <div className="p-4 mt-auto">
+             <a 
+              href="https://www.nasa.gov/blogs/artemis/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="block w-full text-center p-2 rounded border border-slate-800 hover:bg-slate-800 transition-all text-[8px] text-slate-500 hover:text-slate-300 uppercase tracking-[0.2em] font-bold"
+             >
+               View Artemis Blog Mainframe
+             </a>
+          </div>
         </div>
       </div>
 

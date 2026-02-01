@@ -1,3 +1,4 @@
+
 import React, { useMemo } from 'react';
 
 interface Props {
@@ -5,13 +6,13 @@ interface Props {
 }
 
 const MAJOR_MILESTONES = [
-  { label: "Pre-Launch", offset: -177300, color: "slate" },
+  { label: "Countdown Start", offset: -175200, color: "amber" },
   { label: "Liftoff", offset: 0, color: "blue" },
   { label: "Staging", offset: 128, color: "blue" },
-  { label: "Orbit", offset: 2940, color: "cyan" },
-  { label: "Translunar Injection", offset: 92220, color: "indigo" },
+  { label: "Apogee Raise", offset: 6477, color: "cyan" },
+  { label: "TLI Burn", offset: 92220, color: "indigo" },
   { label: "Lunar Flyby", offset: 436980, color: "purple" },
-  { label: "Splashdown", offset: 787560, color: "emerald" }
+  { label: "Splashdown", offset: 783960, color: "emerald" }
 ];
 
 const HorizontalTimeline: React.FC<Props> = ({ elapsedSeconds }) => {

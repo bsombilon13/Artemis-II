@@ -9,6 +9,7 @@ interface Props {
 
 const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose }) => {
   const [tempIds, setTempIds] = useState([...videoIds]);
+  const [isSaving, setIsSaving] = useState(false);
   
   /**
    * Formats a Date object specifically to the America/New_York timezone string
@@ -55,14 +56,17 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
     setTempIds(newIds);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
+
+    // Artificial delay to allow user to perceive the "Saving" state
+    await new Promise(resolve => setTimeout(resolve, 800));
+
     try {
       // tempDateStr is in YYYY-MM-DDTHH:mm:ss format (Wall clock time in ET)
-      // We need to determine the UTC offset for this specific wall time in New York.
       const dummyDate = new Date(tempDateStr);
       
-      // Get the offset string for America/New_York at that point in time
-      // Result is typically "GMT-05:00" or similar
       const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/New_York',
         timeZoneName: 'longOffset'
@@ -71,11 +75,9 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
       const formattedParts = formatter.formatToParts(dummyDate);
       const offsetPart = formattedParts.find(p => p.type === 'timeZoneName')?.value || "";
       
-      // Extract the ±HH:mm part (e.g., -05:00)
       const offsetMatch = offsetPart.match(/[+-]\d{2}:?\d{2}/);
       const offset = offsetMatch ? offsetMatch[0] : "-05:00";
       
-      // Ensure offset is in ±HH:mm format for ISO 8601 parsing
       let finalOffset = offset;
       if (offset.length === 5 && !offset.includes(':')) {
         finalOffset = offset.substring(0, 3) + ":" + offset.substring(3);
@@ -88,9 +90,11 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
         onSave(tempIds, newDate);
       } else {
         console.error("Mission Control: Invalid Launch Date generated", isoWithOffset);
+        setIsSaving(false);
       }
     } catch (err) {
       console.error("Mission Control: Configuration save failed", err);
+      setIsSaving(false);
     }
   };
 
@@ -99,7 +103,13 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
       <div className="glass w-full max-w-md border border-slate-700 rounded-2xl overflow-hidden animate-in fade-in zoom-in duration-200 shadow-[0_0_100px_rgba(0,0,0,0.5)]">
         <div className="bg-slate-900 p-4 border-b border-slate-800 flex items-center justify-between">
           <h2 className="text-sm font-bold mono tracking-widest text-slate-100 uppercase">Mission Configuration</h2>
-          <button onClick={onClose} className="text-slate-500 hover:text-white text-2xl transition-colors">&times;</button>
+          <button 
+            onClick={onClose} 
+            disabled={isSaving}
+            className="text-slate-500 hover:text-white text-2xl transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          >
+            &times;
+          </button>
         </div>
         
         <div className="p-6 space-y-6">
@@ -115,9 +125,10 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
                 <input 
                   type="text" 
                   value={id}
+                  disabled={isSaving}
                   placeholder="Enter ID..."
                   onChange={(e) => handleIdChange(idx, e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-blue-400 focus:outline-none focus:border-blue-500 transition-colors group-hover:border-slate-700"
+                  className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-blue-400 focus:outline-none focus:border-blue-500 transition-colors group-hover:border-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             ))}
@@ -140,9 +151,10 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
               <input 
                 type="datetime-local" 
                 step="1"
+                disabled={isSaving}
                 value={tempDateStr}
                 onChange={(e) => setTempDateStr(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-emerald-400 focus:outline-none focus:border-emerald-500 appearance-none [color-scheme:dark]"
+                className="w-full bg-slate-950 border border-slate-800 rounded px-3 py-2 text-xs mono text-emerald-400 focus:outline-none focus:border-emerald-500 appearance-none [color-scheme:dark] disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <div className="mt-3 p-3 rounded bg-slate-900/50 border border-slate-800">
                 <p className="text-[9px] text-slate-500 mono leading-relaxed uppercase">
@@ -156,15 +168,23 @@ const SettingsPanel: React.FC<Props> = ({ videoIds, launchDate, onSave, onClose 
         <div className="p-4 bg-slate-900 border-t border-slate-800 flex justify-end space-x-3">
           <button 
             onClick={onClose}
-            className="px-4 py-2 text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white transition-colors"
+            disabled={isSaving}
+            className="px-4 py-2 text-xs uppercase tracking-widest font-bold text-slate-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           >
             Abort
           </button>
           <button 
             onClick={handleSave}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-xs uppercase tracking-widest font-bold text-white rounded shadow-lg shadow-blue-900/20 transition-all active:scale-95"
+            disabled={isSaving}
+            className="flex items-center space-x-2 px-6 py-2 bg-blue-600 hover:bg-blue-500 text-xs uppercase tracking-widest font-bold text-white rounded shadow-lg shadow-blue-900/20 transition-all active:scale-95 disabled:bg-blue-800/50 disabled:text-blue-300 disabled:cursor-not-allowed"
           >
-            Update Flight Plan
+            {isSaving && (
+              <svg className="animate-spin -ml-1 mr-2 h-3 w-3 text-white" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            )}
+            <span>{isSaving ? 'Processing Uplink...' : 'Update Flight Plan'}</span>
           </button>
         </div>
       </div>

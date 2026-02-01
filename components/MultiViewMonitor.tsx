@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import ArtemisHUD from './ArtemisHUD';
 import MissionTrajectoryMap from './MissionTrajectoryMap';
-import TelemetryGraphs from './TelemetryGraphs';
 import { TelemetryData } from '../types';
 
 interface Props {
@@ -12,7 +11,7 @@ interface Props {
 }
 
 const MultiViewMonitor: React.FC<Props> = ({ elapsedSeconds, telemetry, telemetryHistory }) => {
-  const [activeView, setActiveView] = useState<'hud' | 'trajectory' | 'graphs'>('hud');
+  const [activeView, setActiveView] = useState<'hud' | 'trajectory'>('hud');
 
   return (
     <div className="glass rounded-xl border border-slate-800 shadow-2xl overflow-hidden flex flex-col h-full bg-slate-900/40 relative">
@@ -20,11 +19,11 @@ const MultiViewMonitor: React.FC<Props> = ({ elapsedSeconds, telemetry, telemetr
       <div className="flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-800 z-30">
         <div className="flex flex-col">
           <span className="text-[10px] text-slate-500 uppercase tracking-widest font-bold">
-            {activeView === 'hud' ? 'Vehicle System Monitor' : activeView === 'trajectory' ? 'Flight Plan Trajectory' : 'Biometric Analysis'}
+            {activeView === 'hud' ? 'Vehicle System Monitor' : 'Flight Plan Trajectory'}
           </span>
           <div className="flex items-center space-x-2">
             <span className="text-[8px] text-blue-400 mono font-bold">
-              {activeView === 'hud' ? 'MODE: TELEMETRY_HUD' : activeView === 'trajectory' ? 'MODE: NAV_ORBITAL' : 'MODE: BIO_TELEM'}
+              {activeView === 'hud' ? 'MODE: TELEMETRY_HUD' : 'MODE: NAV_ORBITAL'}
             </span>
             <span className="text-[8px] text-slate-600 mono">|</span>
             <span className="text-[8px] text-emerald-400 mono font-bold animate-pulse">LIVE_SYNC</span>
@@ -53,16 +52,6 @@ const MultiViewMonitor: React.FC<Props> = ({ elapsedSeconds, telemetry, telemetr
           >
             NAV
           </button>
-          <button 
-            onClick={() => setActiveView('graphs')}
-            className={`px-2 py-1 text-[8px] mono font-bold uppercase tracking-widest rounded transition-all ${
-              activeView === 'graphs' 
-                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/40' 
-                : 'text-slate-500 hover:text-slate-300'
-            }`}
-          >
-            BIO
-          </button>
         </div>
       </div>
 
@@ -73,9 +62,6 @@ const MultiViewMonitor: React.FC<Props> = ({ elapsedSeconds, telemetry, telemetr
         )}
         {activeView === 'trajectory' && (
           <MissionTrajectoryMap elapsedSeconds={elapsedSeconds} hideContainer={true} />
-        )}
-        {activeView === 'graphs' && (
-          <TelemetryGraphs data={telemetryHistory} />
         )}
       </div>
     </div>

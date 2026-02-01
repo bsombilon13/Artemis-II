@@ -8,6 +8,7 @@ import MultiViewMonitor from './components/MultiViewMonitor';
 import SettingsPanel from './components/SettingsPanel';
 import HorizontalTimeline from './components/HorizontalTimeline';
 import NASANewsCard from './components/NASANewsCard';
+import NextMilestoneCard from './components/NextMilestoneCard';
 
 const INITIAL_LAUNCH_DATE = new Date('2026-02-07T02:41:00Z');
 const INITIAL_VIDEO_IDS = ['nrVnsO_rdew', 'Jm8wRjD3xVA', '9vX2P4w6u-4', '21X5lGlDOfg'];
@@ -163,8 +164,11 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex-1 p-4 flex flex-col overflow-hidden space-y-4">
-          <div className="shrink-0">
-            <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
+          <div className="shrink-0 flex space-x-4">
+            <NextMilestoneCard elapsedSeconds={elapsedSeconds} />
+            <div className="flex-1">
+              <HorizontalTimeline elapsedSeconds={elapsedSeconds} />
+            </div>
           </div>
 
           <div className="flex-1 grid grid-cols-12 gap-4 min-h-0 overflow-hidden">

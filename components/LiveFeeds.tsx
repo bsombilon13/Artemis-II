@@ -144,25 +144,11 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 
   return (
     <div ref={containerRef} className="h-full w-full glass rounded-2xl overflow-hidden border border-white/10 relative group bg-black shadow-[0_10px_40px_rgba(0,0,0,0.6)]">
-      {/* HUD Info */}
-      <div className="absolute top-4 left-4 z-40 flex flex-col space-y-2">
-        <div className="flex items-center space-x-3 bg-black/80 backdrop-blur-xl px-4 py-2 rounded-lg text-xs font-black text-white border border-white/20 shadow-xl">
-          <span className={`w-2 h-2 rounded-full ${isLoading ? 'bg-amber-500 animate-pulse' : 'bg-red-600 animate-pulse shadow-[0_0_12px_rgba(220,38,38,0.8)]'}`}></span>
-          <span className="tracking-[0.2em] uppercase font-black">Stream Alpha: Primary Uplink</span>
-        </div>
-        {!isLoading && (
-          <div className="flex items-center space-x-2 bg-blue-500/20 border border-blue-400/30 px-3 py-1 rounded-md animate-in fade-in slide-in-from-left-2 duration-700">
-            <span className="text-[9px] text-blue-300 font-bold uppercase tracking-widest">Signal Lock Active // 42.18ms Latency</span>
-          </div>
-        )}
-      </div>
-      
       {isLoading && (
         <div className="absolute inset-0 z-30 bg-slate-950/90 flex flex-col items-center justify-center space-y-6">
            <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin shadow-[0_0_30px_rgba(59,130,246,0.2)]"></div>
            <div className="flex flex-col items-center">
              <span className="text-sm text-blue-400 font-black animate-pulse uppercase tracking-[0.4em]">Establishing Uplink</span>
-             <span className="text-[10px] text-slate-500 uppercase mt-2 font-bold">Deep Space Network Relay: Goldstone</span>
            </div>
         </div>
       )}
@@ -193,8 +179,6 @@ export const PrimaryFeed: React.FC<{ videoId: string }> = ({ videoId }) => {
 };
 
 export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) => {
-  const titles = ['Exterior Optics 01', 'Orion Navigation Deck', 'Earth Observation 03'];
-  
   const [muteStates, setMuteStates] = useState<boolean[]>(videoIds.map(() => true));
   const [playStates, setPlayStates] = useState<boolean[]>(videoIds.map(() => true));
   const [loadingStates, setLoadingStates] = useState<boolean[]>(videoIds.map(() => true));
@@ -253,13 +237,6 @@ export const SecondaryFeeds: React.FC<SharedProps> = ({ videoIds, onPromote }) =
           ref={el => { containerRefs.current[idx] = el; }} 
           className="aspect-video glass rounded-xl overflow-hidden border border-white/10 relative bg-black group shadow-xl hover:ring-2 hover:ring-blue-500/50 transition-all duration-300"
         >
-           <div className="absolute top-2 left-2 z-20">
-             <div className="flex items-center space-x-2 bg-black/90 backdrop-blur-xl px-3 py-1.5 rounded-lg text-[9px] font-black text-slate-100 border border-white/10 shadow-lg">
-                <span className={`w-1.5 h-1.5 rounded-full ${loadingStates[idx] ? 'bg-amber-500 animate-pulse' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]'}`}></span>
-                <span className="uppercase tracking-widest">{titles[idx] || `Aux Feed 0${idx + 1}`}</span>
-             </div>
-           </div>
-
            {loadingStates[idx] && (
              <div className="absolute inset-0 z-30 bg-slate-950/90 flex items-center justify-center">
                 <div className="w-8 h-8 border-3 border-blue-500/20 border-t-blue-500 rounded-full animate-spin"></div>
